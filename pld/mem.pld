@@ -1,0 +1,18 @@
+GAL16V8
+MEMDecoder
+
+ALE   IOnM  NC   NC  A15  A16   A17   A18   A19  GND
+/OE   CE0   CE1  CE2 CE3  CE4   CE5   CE6   CE7  VCC
+
+/CE7.R = A19  * A18  * A17  * A16  + /IOnM
+/CE6.R = /A19 * A18  * A17  * /A16 + /IOnM
+/CE5.R = /A19 * A18  * /A17 * A16 + /IOnM
+/CE4.R = /A19 * A18  * /A17 * /A16 + /IOnM
+/CE3.R = /A19 * /A18 * A17  * A16 + /IOnM
+/CE2.R = /A19 * /A18 * A17  * /A16 + /IOnM
+/CE1.R = /A19 * /A18 * /A17 * A16 + /IOnM
+/CE0.R = /A19 * /A18 * /A17 * /A16 + /IOnM
+
+DESCRIPTION
+
+MEM space decoder

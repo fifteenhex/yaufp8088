@@ -1,0 +1,3 @@
+[submodule "pld/galette"]
+	path = pld/galette
+	url = https://github.com/simon-frankau/galette.git

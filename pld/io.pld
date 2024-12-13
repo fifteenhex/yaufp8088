@@ -1,0 +1,18 @@
+GAL16V8
+IODecoder
+
+ALE   IOnM  A15   A14   A13   NC   NC    NC    NC   GND
+/OE   CE0   CE1   CE2  CE3   CE4   CE5   CE6   CE7  VCC
+
+/CE7.R = A15  * A14  * A13  + IOnM
+/CE6.R = A15  * A14  * /A13 + IOnM
+/CE5.R = A15  * /A14 * A13  + IOnM
+/CE4.R = A15  * /A14 * /A13 + IOnM
+/CE3.R = /A15 * A14  * A13  + IOnM
+/CE2.R = /A15 * A14  * /A13 + IOnM
+/CE1.R = /A15 * /A14 * A13  + IOnM
+/CE0.R = /A15 * /A14 * /A13 + IOnM
+
+DESCRIPTION
+
+IO space decoder
