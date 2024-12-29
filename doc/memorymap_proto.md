@@ -1,0 +1,9 @@
+Memory
+
+0xe0000 - 0xfffff - flash, 128K
+
+
+IO
+
+0x00f0 - Debug
+0x0000 - PIO
