@@ -1,0 +1,17 @@
+GAL16V8
+proto1
+
+ALATCH AD7   AD6   AD5   AD4   A12   A13   A14   A15   GND
+/OE    IOCE0 IOCE1 IOCE2 IOCE3 IOCE4 IOCE5 IODBG IOnM  VCC
+
+/IODBG.R  = /A15 * /A14 * /A13 * /A12 * AD7  * AD6  * AD5  * AD4  * IOnM
+/IOCE5.R  = /A15 * /A14 * /A13 * /A12 * /AD7 * AD6  * /AD5 * AD4  * IOnM
+/IOCE4.R  = /A15 * /A14 * /A13 * /A12 * /AD7 * AD6  * /AD5 * /AD4 * IOnM
+/IOCE3.R  = /A15 * /A14 * /A13 * /A12 * /AD7 * /AD6 *  AD5 *  AD4 * IOnM
+/IOCE2.R  = /A15 * /A14 * /A13 * /A12 * /AD7 * /AD6 *  AD5 * /AD4 * IOnM
+/IOCE1.R  = /A15 * /A14 * /A13 * /A12 * /AD7 * /AD6 * /AD5 * AD4  * IOnM
+/IOCE0.R  = /A15 * /A14 * /A13 * /A12 * /AD7 * /AD6 * /AD5 * /AD4 * IOnM
+
+DESCRIPTION
+
+IO Glue for protoboard
