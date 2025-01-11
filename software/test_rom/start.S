@@ -32,18 +32,26 @@ setup_usart:
 
 print_banner:
 	mov bx, str_banner
-_print_banner_next:
-	mov al, [bx]
-	cmp al, 0
-	je _print_banner_exit
-	out IOPORT_USART_DATA, al
-	add bx, 1
-_print_banner_wait:
-	in al, IOPORT_USART_CMD
-	and al, USART_STATUS_TXRDY
-	jz _print_banner_wait
-	jmp _print_banner_next
-_print_banner_exit:
+	usart_puts
+
+; Zero the RAM
+	mov bx, str_clearing_ram
+	usart_puts
+
+	mov ax, 0
+	mov es, ax
+	mov di, 0
+_ram_loop:
+	mov [es:di], al
+	add di, 1
+	cmp di, 0
+	jnz _ram_loop
+_ram_loop_exit:
+
+
+; Test loop
+	mov bx, str_testloop
+	usart_puts
 
 ;;
 	mov al, 0x55
@@ -58,9 +66,8 @@ shout:
 	not bl
 	out IOPORT_PIO_PORTC, al
 
-; usart
-;	mov al, 'a'
-;	out IOPORT_USART_DATA, al
+	mov al, '.'
+	usart_putch
 
 	mov ax, 0xffff
 waitloop:
@@ -75,4 +82,8 @@ out:
 	jmp shout
 
 str_banner:
-	db `Test ROM\n\r`, 0
+	db `-- Test ROM --\n\r`, 0
+str_clearing_ram:
+	db `Clearing SRAM\n\r`, 0
+str_testloop:
+	db `Doing test loop...\n\r`, 0
