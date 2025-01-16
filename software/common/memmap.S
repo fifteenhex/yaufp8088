@@ -1,0 +1,1 @@
+%define MEMMAP_SEG_FLASH	0xe000
