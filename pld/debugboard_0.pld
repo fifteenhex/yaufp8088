@@ -1,0 +1,17 @@
+GAL16V8
+dbg0
+
+LATCH  D0   D1   D2   D3   NC   NC   NC   NC   GND
+/OE    SEGA SEGB DP   SEGC SEGD SEGE SEGG SEGF VCC
+
+SEGA.R = /D3 * D1 + /D3 * D2 * D0 + D3 * /D2 * /D1 + D2 * D1 + D3 * /D2 * /D0
+SEGB.R = /D3 * D2 * /D1 * /D0 + /D3 * D1 * D0 + D3 * /D1 * D0 + D3 * D1 * /D0 + /D3 * /D2 * D1 + D3 * /D2 * /D1
+SEGC.R = /D3 * D2 + D3 * /D2 + /D1 * D0 + /D3 * /D1 + /D3 * D0
+SEGD.R =  /D2 * /D0 + /D2 * D1 + D2 * /D1 * D0 + D1 * /D0 + D3 * D2 * /D1
+SEGE.R = /D2 * /D0 + D1 * /D0 + D3 * D1 + D3 * D2
+SEGF.R = /D3 * D2 * /D1 + D3 * /D2 * /D1 + D2 * D1 * /D0 + D3 * D1 * D0
+SEGG.R = /D0 + /D2 * D1 + D2 * /D1 + D3 
+
+DESCRIPTION
+
+decoder for dbg
