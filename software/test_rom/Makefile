@@ -4,8 +4,8 @@ all: rom.img rom_512k.img code.bin.dbg
 common:
 	$(MAKE) -C ../common
 
-start.o: start.S
-	nasm -fas86 -o $@ $<
+start.o: start.S ../common/reset.S ../common/pic_8259.S ../common/usart_8251.S
+	nasm -wall -fas86 -o $@ $<
 
 code.bin.dbg: start.o
 	ld86 -M -0 -m -o $@ $^

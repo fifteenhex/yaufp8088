@@ -26,8 +26,8 @@
 %endmacro
 
 %macro pic_unmask 1
-	mov al, ~(1 << %1)
-;	mov al, 0xfd
+	pic_read_imr
+	and al, ~(1 << %1)
 	out IOPORT_PIC_A0, al
 %endmacro
 
