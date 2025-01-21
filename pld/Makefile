@@ -10,3 +10,7 @@ endef
 
 $(eval $(call chip_targets,io))
 $(eval $(call chip_targets,mem))
+$(eval $(call chip_targets,protoboard_0))
+$(eval $(call chip_targets,protoboard_1))
+
+$(eval $(call chip_targets,debugboard_0))

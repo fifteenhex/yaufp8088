@@ -7,11 +7,10 @@ ALATCH CCLK ALE IOnM A19  A18   A17  A16   A15       GND
 ALATCHOUT = CCLK * ALE
 
 /CE4.R  = A19  * A18  * A17  * /IOnM
-LA16  = A16
+LA16.R  = A16
 
-
-/CE3H.R = A19  * A18  * /A17  * /A16 * A15  * /IOnM
-/CE3L.R = A19  * A18  * /A17  * /A16 * /A15 * /IOnM
+/CE3H.R = /A19  * /A18  * /A17  * /A16 * A15  * /IOnM
+/CE3L.R = /A19  * /A18  * /A17  * /A16 * /A15 * /IOnM
 
 /CE2.R  = /A19 * /A18 * A17  * /A16 * /IOnM
 /CE1.R  = /A19 * /A18 * /A17 * A16  * /IOnM
