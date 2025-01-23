@@ -1,3 +1,4 @@
+; kate: syntax Intel x86 (NASM)
 [bits 16]
 
 %include "../common/usart_8251.S"
