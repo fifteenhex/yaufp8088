@@ -16,6 +16,8 @@ extern printhex
 extern badint_0
 extern uartrxinthandler
 extern uarttxinthandler
+extern func_pit_wait
+extern tickinthandler
 
 section .text
 _main:
@@ -195,31 +197,8 @@ test_sub:
 	usart_puts
 	ret
 
-tickinthandler:
-	push ax
-	pic_eoi
-	pop ax
-	iret
-
 nmihandler:
 	iret
-
-func_pit_wait:
-	push ax
-
-	; counter1, mode0, counter ~100ms
-	mov al, ((0x1 << PIT_CTRL_COUNTER_SHIFT) | PIT_CTRL_READLOAD_LSBMSB)
-	out IOPORT_PIT_CTRL, al
-	mov al, 0x24
-	out IOPORT_PIT_CNT1, al
-	mov al, 0xf4
-	out IOPORT_PIT_CNT1, al
-
-	; Wait for the int
-	hlt
-
-	pop ax
-	ret
 
 section .data
 

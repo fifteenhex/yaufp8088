@@ -16,8 +16,17 @@ interrupts.o: interrupts.S
 console.o: console.S
 	nasm -wall -g -felf -o $@ $<
 
-start.elf: start.o util.o console.o interrupts.o rom.ld common
-	ld -melf_i386 --no-check-sections -T rom.ld -o $@ start.o interrupts.o util.o console.o ../common/reset.o
+tick.o: tick.S
+	nasm -wall -g -felf -o $@ $<
+	
+start.elf: start.o util.o console.o interrupts.o tick.o rom.ld common
+	ld -melf_i386 --no-check-sections -T rom.ld -o $@ \
+		start.o \
+		interrupts.o \
+		util.o \
+		console.o \
+		tick.o \
+		../common/reset.o
 
 start.bin: start.elf
 	objcopy --gap-fill=0xff -O binary $< $@
