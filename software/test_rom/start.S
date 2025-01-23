@@ -10,6 +10,12 @@
 %include "../common/string.S"
 
 global _main
+extern divzerointhandler
+extern str_newline
+extern printhex
+extern badint_0
+extern uartrxinthandler
+extern uarttxinthandler
 
 section .text
 _main:
@@ -50,7 +56,7 @@ _stack_setup:
 	mov bx, str_stack
 	usart_puts
 
-	mov ax, (0xf000 >> 4)
+	mov ax, MEMMAP_SEG_STACK
 	mov ss, ax
 	mov sp, 0x0fff
 	call test_sub
@@ -189,61 +195,6 @@ test_sub:
 	usart_puts
 	ret
 
-; value to print in ax
-printhex:
-	push ax
-	push bx
-	push cx
-	push si
-
-	push ax
-	; print the 0x bit
-	mov bx, hexprefix
-	usart_puts
-	pop ax
-
-	; copy value into bx
-	mov bx, ax
-	; cl is the number of bits to shift right
-	mov cl, 12
-
-_printhex:
-	; get the current nibble
-	shr ax, cl
-	and ax, 0xf
-
-	; point si at the acsii for the current nibble, load it into al
-	mov si, hextbl
-	add si, ax
-	mov al, [si]
-
-	; al now contains the acsii char, print it
-	usart_putch
-
-	; are we done yet?
-	cmp cl, 0
-	je _printhex_exit
-
-	; restore value
-	mov ax, bx
-	; adjust the amount of shift
-	sub cl, 4
-	; do next nibble
-	jmp _printhex
-
-_printhex_exit:
-	; restore si, cx, bx, ax, return
-	pop si
-	pop cx
-	pop bx
-	pop ax
-	ret
-
-divzerointhandler:
-	mov bx, str_divzero
-	usart_puts
-	iret
-
 tickinthandler:
 	push ax
 	pic_eoi
@@ -251,87 +202,6 @@ tickinthandler:
 	iret
 
 nmihandler:
-	iret
-
-uartrxinthandler:
-	push ax
-	_usart_getch
-;	call printhex
-	pic_eoi
-	pop ax
-	iret
-
-uarttxinthandler:
-	push ax
-	pic_eoi
-	pop ax
-	iret
-
-str_badint_imr:
-	db `PIC IMR:`, 0
-str_badint_irr:
-	db `PIC IRR:`, 0
-str_badint_isr:
-	db `PIC ISR:`, 0
-
-%macro print_pic_reg 1
-	mov bx, %1
-	usart_puts
-	pop ax
-	call printhex
-	mov bx, str_newline
-	usart_puts
-%endmacro
-
-%assign i 0
-%rep    256
-	align 8
-badint_%+i:
-	push ax
-	mov ax, i
-	jmp _badinthandler
-%assign i i+1
-%endrep
-badinthandler:
-	mov ax, 0xffff
-_badinthandler:
-	push bx
-	call printhex
-
-	; push the PIC registers onto the stack
-	mov ax, 0
-	pic_read_isr
-	push ax
-	pic_read_irr
-	push ax
-	pic_read_imr
-	push ax
-
-	; End the interrupt and mask everything
-	pic_eoi
-	pic_mask_all
-
-	; Print out registers
-	mov bx, str_newline
-	usart_puts
-
-	mov bx, str_canihazirq
-	usart_puts
-
-	; print the PIC IMR
-	print_pic_reg str_badint_imr
-	; print the PIC IRR
-	print_pic_reg str_badint_irr
-	; print the PIC ISR
-	print_pic_reg str_badint_isr
-
-
-	mov bx, str_newline
-	usart_puts
-
-	pop bx
-	pop ax
-
 	iret
 
 func_pit_wait:
@@ -351,6 +221,8 @@ func_pit_wait:
 	pop ax
 	ret
 
+section .data
+
 str_banner:
 	db `-- Test ROM --\n\r`, 0
 str_clearing_ram:
@@ -363,20 +235,13 @@ str_intssetup:
 	db `Setting up interrupts\n\r`, 0
 str_intstest:
 	db `Testing interrupts\n\r`, 0
-str_divzero:
-	db `Divide by zero\n\r`, 0
-str_canihazirq:
-	db `Wrong IRQ!\n\r`, 0
 str_testloop:
 	db `Doing test loop...\n\r`, 0
 str_testloopinner:
 	db `\n\r loop \n\r`, 0
 str_alivemsg:
 	db `.\n\r`, 0
-str_newline:
-	db `\n\r`, 0
 
-hexprefix:
-	db "0x",0
-hextbl:
-	db "0123456789abcdef"
+section .bss
+something:
+	db

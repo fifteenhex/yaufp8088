@@ -1,25 +1,39 @@
-all: rom.img rom_512k.img code.bin.dbg
+all: rom_512k.img
 
 .PHONY: common
 common:
 	$(MAKE) -C ../common
 
-start.o: start.S ../common/reset.S ../common/pic_8259.S ../common/usart_8251.S
-	nasm -wall -fas86 -o $@ $<
+start.o: start.S
+	nasm -wall -g -felf -o $@ $<
 
-code.bin.dbg: start.o
-	ld86 -M -0 -m -o $@ $^
+util.o: util.S
+	nasm -wall -g -felf -o $@ $<
 
-code.bin: start.o
-	ld86 -d -0 -o $@ $^
+interrupts.o: interrupts.S
+	nasm -wall -g -felf -o $@ $<
 
-rom.img: rom.cfg common code.bin
-	genimage --config $< --inputpath ./ --outputpath ./
+console.o: console.S
+	nasm -wall -g -felf -o $@ $<
 
-rom_512k.img: rom_512k.cfg rom.img
+start.elf: start.o util.o console.o interrupts.o rom.ld ../common/reset.o
+	ld -melf_i386 --no-check-sections -T rom.ld -o $@ start.o interrupts.o util.o console.o ../common/reset.o
+
+start.bin: start.elf
+	objcopy --gap-fill=0xff -O binary $< $@
+
+#start.o: start.S ../common/reset.S ../common/pic_8259.S ../common/usart_8251.S
+#	nasm -wall -fas86 -o $@ $<
+
+rom_512k.img: rom_512k.cfg start.bin
 	genimage --config $< --inputpath ./ --outputpath ./
 
 
 .PHONY: burn
 burn: rom_512k.img
 	minipro -p SST39SF040 -w $<
+
+.PHONY: disasm
+
+disasm: start.bin
+	objdump -mi386 -Maddr16,data16 -d start.bin
