@@ -6,4 +6,4 @@ all:
 
 .PHONY: bootstrap
 bootstrap:
-	sudo apt-get install nasm
+	sudo apt-get install nasm genimage
