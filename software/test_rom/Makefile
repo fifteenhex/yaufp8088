@@ -16,7 +16,7 @@ interrupts.o: interrupts.S
 console.o: console.S
 	nasm -wall -g -felf -o $@ $<
 
-start.elf: start.o util.o console.o interrupts.o rom.ld ../common/reset.o
+start.elf: start.o util.o console.o interrupts.o rom.ld common
 	ld -melf_i386 --no-check-sections -T rom.ld -o $@ start.o interrupts.o util.o console.o ../common/reset.o
 
 start.bin: start.elf
@@ -37,3 +37,7 @@ burn: rom_512k.img
 
 disasm: start.bin
 	objdump -mi386 -Maddr16,data16 -d start.bin
+
+.PHONY:	clean
+clean:
+	- rm *.o

@@ -1,5 +1,6 @@
 [bits 16]
 
+%include "../common/pic_8259.S"
 %include "../common/usart_8251.S"
 
 section .text

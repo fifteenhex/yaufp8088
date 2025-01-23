@@ -1,6 +1,7 @@
 .PHONY: all
 
 all:
+	$(MAKE) -C pld
 	$(MAKE) -C software
 
 

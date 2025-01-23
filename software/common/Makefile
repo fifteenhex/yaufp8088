@@ -1,3 +1,4 @@
+.PHONY: all
 all: reset.o
 
 reset.o: reset.S
