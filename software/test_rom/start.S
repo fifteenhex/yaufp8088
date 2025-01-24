@@ -19,11 +19,12 @@ extern uartrxinthandler
 extern uarttxinthandler
 extern func_pit_wait
 extern tickinthandler
+extern func_tick_init
+extern func_tick_get
 
 section .text
 _main:
 	cli
-
 setup_pio:
 	mov al, (1 << 7)
 	out IOPORT_PIO_CTRL, al
@@ -63,6 +64,10 @@ _stack_setup:
 	mov ss, ax
 	mov sp, 0x0fff
 	call test_sub
+
+; setup BSS
+	mov ax, MEMMAP_SEG_BSS
+	mov es, ax
 
 ; Interrtupts init
 	mov bx, str_intssetup
@@ -120,23 +125,25 @@ _inittablefill_exit:
 	pic_mask_all
 
 	mov ax, 0
-        pic_read_imr
-        call printhex
-        mov bx, str_newline
+	pic_read_imr
+	call printhex
+	mov bx, str_newline
 	usart_puts
 
 ; Interrtupts test
 	mov bx, str_intstest
 	usart_puts
 
-        ; Unmask tick
+	; Unmask tick
 	pic_unmask 1
 
 	mov ax, 0
-        pic_read_imr
-        call printhex
-        mov bx, str_newline
+	pic_read_imr
+	call printhex
+	mov bx, str_newline
 	usart_puts
+
+	call func_tick_init
 
 	; Enable interrupts
 	sti
@@ -148,8 +155,8 @@ _inittablefill_exit:
 
 
 ; Test loop
-        ; Unmask uart rx/tx
-        pic_unmask 2
+	; Unmask uart rx/tx
+	pic_unmask 2
 	pic_unmask 5
 
 	; enable interrupts
@@ -187,10 +194,12 @@ waitloop:
 	call func_pit_wait
 	sub ax, 1
 	jmp waitloop
-
+	
 out:
 	add dl, 1
-
+	call func_tick_get
+	call printhex
+	
 	jmp shout
 
 test_sub:

@@ -2,11 +2,22 @@
 [bits 16]
 
 %include "../common/pit_8253.S"
+%include "../common/pic_8259.S"
 
 section .text
 
 global func_pit_wait
 global tickinthandler
+global func_tick_init
+global func_tick_get
+
+func_tick_init:
+	mov [es:ticks], WORD 0
+	ret
+
+func_tick_get:
+	mov ax, [es:ticks]
+	ret
 
 func_pit_wait:
 	push ax
@@ -27,10 +38,12 @@ func_pit_wait:
 
 tickinthandler:
 	push ax
+	
+	add [es:ticks], WORD 1
+	
 	pic_eoi
 	pop ax
 	iret
 
 section .bss
-ticks_l: resw 1
-ticks_h: resw 1
+ticks: resw 1
