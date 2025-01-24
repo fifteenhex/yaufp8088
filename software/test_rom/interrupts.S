@@ -1,13 +1,45 @@
 ; kate: syntax Intel x86 (NASM)
+; kate: replace-tabs off
 [bits 16]
 
 %include "../common/pic_8259.S"
 %include "../common/usart_8251.S"
+%include "../common/memmap.S"
 
 section .text
 
 extern str_newline
 extern printhex
+
+
+; Interrtupts init
+global func_interrupts_init
+func_interrupts_init:
+_inttablefill:
+	push es
+	; point es at the SRAM
+	mov ax, 0
+	mov es, ax
+	;
+	mov ax, 0x400
+	mov di, 0
+	mov si, WORD badint_0
+	; put the segment in bx
+	mov bx, MEMMAP_SEG_FLASH
+_inttablefill_next:
+	cmp ax, di
+	je _inittablefill_exit
+	mov [es:di], si
+	add di, 2
+	mov [es:di], bx
+	add di, 2
+
+	add si, 8
+
+	jmp _inttablefill_next
+_inittablefill_exit:
+	pop es
+	ret
 
 %macro print_pic_reg 1
 	mov bx, %1

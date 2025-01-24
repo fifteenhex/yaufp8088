@@ -1,0 +1,1 @@
+extern func_monitor_init

@@ -1,4 +1,5 @@
 ; kate: syntax Intel x86 (NASM)
+; kate: replace-tabs off
 [bits 16]
 
 %include "../common/debug.S"
@@ -9,18 +10,16 @@
 %include "../common/memmap.S"
 %include "../common/interrupts.S"
 %include "../common/string.S"
+%include "console.h"
+%include "tick.h"
+%include "monitor.h"
 
 global _main
 extern divzerointhandler
 extern str_newline
 extern printhex
 extern badint_0
-extern uartrxinthandler
-extern uarttxinthandler
-extern func_pit_wait
-extern tickinthandler
-extern func_tick_init
-extern func_tick_get
+extern func_interrupts_init
 
 section .text
 _main:
@@ -69,50 +68,11 @@ _stack_setup:
 	mov ax, MEMMAP_SEG_BSS
 	mov es, ax
 
-; Interrtupts init
+
 	mov bx, str_intssetup
 	usart_puts
-
-_inttablefill:
-	; point es at the SRAM
-	mov ax, 0
-	mov es, ax
-
-	;
-	mov ax, 0x400
-	mov di, 0
-	mov si, WORD badint_0
-	; put the segment in bx
-	mov bx, MEMMAP_SEG_FLASH
-_inttablefill_next:
-	cmp ax, di
-	je _inittablefill_exit
-	mov [es:di], si
-	add di, 2
-	mov [es:di], bx
-	add di, 2
-
-	add si, 8
-
-	jmp _inttablefill_next
-_inittablefill_exit:
-
-	; insert divide by zero handler
-	mov di, 0
-	mov [es:di], WORD divzerointhandler
-	; insert NMI handler
-	mov di, (2 * 4)
-	mov [es:di], WORD nmihandler
-
-	; insert tick handler
-	mov di, INTERRUPTS_PIC_IVT_IR1
-	mov [es:di], WORD tickinthandler
-	; insert uart rx handler
-	mov di, INTERRUPTS_PIC_IVT_IR2
-	mov [es:di], WORD uartrxinthandler
-	; insert uart tx handler
-	mov di, INTERRUPTS_PIC_IVT_IR5
-	mov [es:di], WORD uarttxinthandler
+	call func_interrupts_init
+	call func_monitor_init
 
 	mov al, (PIC_ICW1_SINGLE | PIC_ICW1_IC4 | PIC_ICW1)
 	out IOPORT_PIC_NA0, al
@@ -143,7 +103,9 @@ _inittablefill_exit:
 	mov bx, str_newline
 	usart_puts
 
+	call func_console_init
 	call func_tick_init
+	call func_tick_start
 
 	; Enable interrupts
 	sti
@@ -199,16 +161,20 @@ out:
 	add dl, 1
 	call func_tick_get
 	call printhex
-	
+
+	call func_console_availablechars
+	cmp ax, 0
+	je noch
+	call func_console_getch
+	usart_putch
+noch:
+
 	jmp shout
 
 test_sub:
 	mov bx, str_sub
 	usart_puts
 	ret
-
-nmihandler:
-	iret
 
 section .data
 
@@ -233,4 +199,4 @@ str_alivemsg:
 
 section .bss
 something:
-	db
+	resb 1

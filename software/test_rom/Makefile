@@ -18,14 +18,24 @@ console.o: console.S
 
 tick.o: tick.S
 	nasm -wall -g -felf -o $@ $<
-	
-start.elf: start.o util.o console.o interrupts.o tick.o rom.ld common
+
+monitor.o: monitor.S
+	nasm -wall -g -felf -o $@ $<
+
+start.elf: start.o \
+	   util.o \
+	   console.o \
+	   interrupts.o \
+	   tick.o \
+	   monitor.o \
+	   rom.ld common
 	ld -melf_i386 --no-check-sections -T rom.ld -o $@ \
 		start.o \
 		interrupts.o \
 		util.o \
 		console.o \
 		tick.o \
+		monitor.o \
 		../common/reset.o
 
 start.bin: start.elf
@@ -44,8 +54,8 @@ burn: rom_512k.img
 
 .PHONY: disasm
 
-disasm: start.bin
-	objdump -mi386 -Maddr16,data16 -d start.bin
+disasm: start.elf
+	objdump -mi386 -Maddr16,data16 -d start.elf
 
 .PHONY:	clean
 clean:
