@@ -36,17 +36,32 @@ func_console_init:
 
 global func_console_availablechars
 func_console_availablechars:
+	push bx
+	push cx
 	xor ax, ax
-	mov al, [es:console_rxhead]
+
+	mov bl, [es:console_rxhead]
+	mov cl, [es:console_rxtail]
+
+	cmp bl, cl
+	je func_console_availablechars_out
+	mov al, 1
+
+func_console_availablechars_out:
+	pop cx
+	pop bx
 	ret
 
 global func_console_getch
 func_console_getch:
 	push bx
 	xor bx, bx
+
 	mov bl, [es:console_rxtail]
 	mov al, [es:bx + console_rxbuff]
+	add bl, 1
 	mov [es:console_rxtail], bl
+
 	pop bx
 	ret
 
@@ -58,8 +73,10 @@ console_uart_rx_inthandler:
 	_usart_getch
 	xor bx, bx
 	mov bl, [es:console_rxhead]
-	add bl, 1
 	mov [es:bx + console_rxbuff], BYTE al
+
+	; push rxhead forward
+	add bl, 1
 	mov [es:console_rxhead], bl
 
 	; end the interrupt and go home

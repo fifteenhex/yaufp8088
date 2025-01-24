@@ -163,6 +163,7 @@ out:
 	call printhex
 
 	call func_console_availablechars
+	call printhex
 	cmp ax, 0
 	je noch
 	call func_console_getch
