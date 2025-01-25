@@ -4,11 +4,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           submodules: true
-      - run: |
-         sudo add-apt-repository --yes ppa:kicad/kicad-8.0-releases
-         sudo apt update
-      - run: make bootstrap
-      - run: make
+      - name: Prep env
+        run: |
+          sudo add-apt-repository --yes ppa:kicad/kicad-8.0-releases
+          sudo apt update
+      - name: Bootstap
+        run: make bootstrap
+      - name: Build
+        run: make
+      - name: Archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: prototype-schematic.pdf
+          path: eda/prototype/schematic.pdf
