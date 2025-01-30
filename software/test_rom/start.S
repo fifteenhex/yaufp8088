@@ -13,6 +13,8 @@
 %include "console.h"
 %include "tick.h"
 %include "monitor.h"
+%include "buzzer.h"
+%include "display.h"
 
 global _main
 extern divzerointhandler
@@ -115,7 +117,6 @@ _stack_setup:
 	; Disable interrupts
 	cli
 
-
 ; Test loop
 	; Unmask uart rx/tx
 	pic_unmask 2
@@ -124,6 +125,9 @@ _stack_setup:
 	; enable interrupts
 	sti
 
+; needs interrupts,... fixme
+	call func_display_init
+	
 	mov bx, str_testloop
 	usart_puts
 
@@ -131,6 +135,8 @@ _stack_setup:
 	mov al, 0x55
 	mov dl, 0
 shout:
+	call func_beep_boop
+
 ; banner
 	mov bx, str_testloopinner
 	usart_puts
@@ -138,11 +144,6 @@ shout:
 ; dbg port
 	mov al, dl
 	out IOPORT_DBG, al
-
-; pio
-	mov al, bl
-	not bl
-	out IOPORT_PIO_PORTC, al
 
 	mov ax, 100
 waitloop:

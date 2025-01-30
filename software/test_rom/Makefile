@@ -19,23 +19,26 @@ console.o: console.S
 tick.o: tick.S
 	nasm -wall -g -felf -o $@ $<
 
+buzzer.o: buzzer.S
+	nasm -wall -g -felf -o $@ $<
+
 monitor.o: monitor.S
 	nasm -wall -g -felf -o $@ $<
 
-start.elf: start.o \
+display.o: display.S
+	nasm -wall -g -felf -o $@ $<
+
+OBJS=start.o \
 	   util.o \
 	   console.o \
 	   interrupts.o \
 	   tick.o \
 	   monitor.o \
-	   rom.ld common
+	   buzzer.o \
+	   display.o
+start.elf: $(OBJS) rom.ld common
 	ld -melf_i386 --no-check-sections -T rom.ld -o $@ \
-		start.o \
-		interrupts.o \
-		util.o \
-		console.o \
-		tick.o \
-		monitor.o \
+		$(OBJS) \
 		../common/reset.o
 
 start.bin: start.elf
