@@ -28,6 +28,9 @@ monitor.o: monitor.S
 display.o: display.S
 	nasm -wall -g -felf -o $@ $<
 
+rtc.o: rtc.S
+	nasm -wall -g -felf -o $@ $<
+
 OBJS=start.o \
 	   util.o \
 	   console.o \
@@ -35,7 +38,9 @@ OBJS=start.o \
 	   tick.o \
 	   monitor.o \
 	   buzzer.o \
-	   display.o
+	   display.o \
+	   rtc.o
+
 start.elf: $(OBJS) rom.ld common
 	ld -melf_i386 --no-check-sections -T rom.ld -o $@ \
 		$(OBJS) \

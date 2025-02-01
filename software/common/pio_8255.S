@@ -4,3 +4,6 @@
 %define IOPORT_PIO_PORTC	IOPORT_PIO + 2
 %define IOPORT_PIO_CTRL		IOPORT_PIO + 3
 
+%define PIO_BIT_SET     (1)
+%define PIO_BIT_CLR     (0)
+%define PIO_BIT_SHIFT   1

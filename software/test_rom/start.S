@@ -15,6 +15,7 @@
 %include "monitor.h"
 %include "buzzer.h"
 %include "display.h"
+%include "rtc.h"
 
 global _main
 extern divzerointhandler
@@ -127,6 +128,7 @@ _stack_setup:
 
 ; needs interrupts,... fixme
 	call func_display_init
+	call func_rtc_init
 	
 	mov bx, str_testloop
 	usart_puts
@@ -135,7 +137,7 @@ _stack_setup:
 	mov al, 0x55
 	mov dl, 0
 shout:
-	call func_beep_boop
+	;call func_beep_boop
 
 ; banner
 	mov bx, str_testloopinner
@@ -163,12 +165,13 @@ out:
 	call func_tick_get
 	call printhex
 
-	call func_console_availablechars
+	;call func_console_availablechars
+	call func_rtc_readsec
 	call printhex
-	cmp ax, 0
-	je noch
-	call func_console_getch
-	usart_putch
+	;cmp ax, 0
+	;je noch
+	;call func_console_getch
+	;usart_putch
 noch:
 
 	jmp shout
