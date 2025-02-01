@@ -18,7 +18,23 @@
 %define ILI9225_REG_POWERCTRL_3		0x12
 %define ILI9225_REG_POWERCTRL_4		0x13
 %define ILI9225_REG_POWERCTRL_5		0x14
+%define ILI9225_REG_RAMADDRESSSET_1	0x20
+%define ILI9225_REG_RAMADDRESSSET_2	0x21
 %define ILI9225_REG_GRAM			0x22
+%define ILI9225_REG_GAMMACTRL_1		0x50
+%define ILI9225_REG_GAMMACTRL_2		0x51
+%define ILI9225_REG_GAMMACTRL_3		0x52
+%define ILI9225_REG_GAMMACTRL_4		0x53
+%define ILI9225_REG_GAMMACTRL_5		0x54
+%define ILI9225_REG_GAMMACTRL_6		0x55
+%define ILI9225_REG_GAMMACTRL_7		0x56
+%define ILI9225_REG_GAMMACTRL_8		0x57
+%define ILI9225_REG_GAMMACTRL_9		0x58
+%define ILI9225_REG_GAMMACTRL_10	0x59
+
+%define WIDTH 176
+%define HEIGHT 220
+%define FBSZ (WIDTH * HEIGHT)
 
 section .text
 
@@ -37,6 +53,15 @@ global func_display_init
 %macro display_write_reg 2
 	display_set_index %1
 	display_write_data %2
+%endmacro
+
+%macro display_clear 0
+	display_set_index ILI9225_REG_GRAM
+	mov cx, FBSZ
+%%zzz0:
+	display_write_data 0
+	sub cx, 1
+	jne %%zzz0
 %endmacro
 
 func_display_init:
@@ -82,8 +107,8 @@ func_display_init:
 	display_write_reg 0x0c,0x0000
 	display_write_reg 0x0f,0x0D01
 	display_write_reg 0x15,0x0020
-	display_write_reg 0x20,0x0000
-	display_write_reg 0x21,0x0000
+	display_write_reg ILI9225_REG_RAMADDRESSSET_1,0x0000
+	display_write_reg ILI9225_REG_RAMADDRESSSET_2,0x0000
 
 	display_write_reg 0x30,0x0000
 	display_write_reg 0x31,0x00DB
@@ -97,42 +122,33 @@ func_display_init:
 	display_write_reg 0x38,0x00DB
 	display_write_reg 0x39,0x0000
 
-	display_write_reg 0x50,0x0000
-	display_write_reg 0x51,0x0808
-	display_write_reg 0x52,0x080A
-	display_write_reg 0x53,0x000A
-	display_write_reg 0x54,0x0A08
-	display_write_reg 0x55,0x0808
-	display_write_reg 0x56,0x0000
-	display_write_reg 0x57,0x0A00
-	display_write_reg 0x58,0x0710
-	display_write_reg 0x59,0x0710
+	display_write_reg ILI9225_REG_GAMMACTRL_1,0x0000
+	display_write_reg ILI9225_REG_GAMMACTRL_2,0x0808
+	display_write_reg ILI9225_REG_GAMMACTRL_3,0x080A
+	display_write_reg ILI9225_REG_GAMMACTRL_4,0x000A
+	display_write_reg ILI9225_REG_GAMMACTRL_5,0x0A08
+	display_write_reg ILI9225_REG_GAMMACTRL_6,0x0808
+	display_write_reg ILI9225_REG_GAMMACTRL_7,0x0000
+	display_write_reg ILI9225_REG_GAMMACTRL_8,0x0A00
+	display_write_reg ILI9225_REG_GAMMACTRL_9,0x0710
+	display_write_reg ILI9225_REG_GAMMACTRL_10,0x0710
 
 	display_write_reg ILI9225_REG_DISPCTRL_1,0x0012
 	call func_pit_wait
 	
 	display_write_reg ILI9225_REG_DISPCTRL_1,0x1017
 
-	display_set_index ILI9225_REG_GRAM
+	display_clear
 
+	display_write_reg ILI9225_REG_RAMADDRESSSET_1,0x0000
+	display_write_reg ILI9225_REG_RAMADDRESSSET_2,0x0000
+	display_set_index ILI9225_REG_GRAM
 	mov cx, 0x3020
 zzz0:
 	display_write_data 0xf800
 	sub cx, 1
 	jne zzz0
 
-	mov cx, 0x3020
-zzz1:
-	display_write_data 0x07e0
-	sub cx, 1
-	jne zzz1
-	
-	mov cx, 0x3020
-zzz2:
-	display_write_data 0x001f
-	sub cx, 1
-	jne zzz2
-	
 	; turn backlight on
 	mov al, 0xff
 	out IOPORT_PIO_PORTC, al
