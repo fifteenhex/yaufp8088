@@ -4,6 +4,10 @@
 
 %include "../common/memmap.S"
 %include "../common/usart_8251.S"
+%include "../common/pic_8259.S"
+%include "util.h"
+%include "interrupts.h"
+%include "interrupts_util.h"
 
 section .text
 
@@ -31,8 +35,13 @@ func_monitor_init:
     ret
 
 nmihandler:
+	pic_stack_regs
+
 	mov bx, str_nmi
 	usart_puts
+
+	interrupts_dumppic
+
 	jmp $
 ;    iret
     

@@ -80,7 +80,8 @@ func_rtc_readsec:
 	sti
 	ret
 
-global func_rtc_enableint:
+global func_rtc_enableint
+func_rtc_enableint:
 	pic_unmask 7
 	ret
 
@@ -88,6 +89,6 @@ rtc_inthandler:
 	push ax
 	mov al, 0
 	out IOPORT_RTC_CONTROL_D, al
-	pic_eoi
+	pic_seoi 7
 	pop ax
 	iret

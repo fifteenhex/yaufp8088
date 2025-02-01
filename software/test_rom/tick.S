@@ -7,7 +7,8 @@
 %include "../common/memmap.S"
 %include "../common/interrupts.S"
 
-%define TICK_PIT_CHAN 1
+%define TICK_PIT_CHAN	1
+%define TICK_PIC_IRQ	1
 
 section .text
 
@@ -60,12 +61,17 @@ func_tick_once:
 
 func_tick_start:
 	push ax
+
+	pic_unmask TICK_PIC_IRQ
+
 	pit_arm
 	mov [es:tick_enabled], BYTE 1
 	pop ax
 	ret
 
 func_tick_stop:
+	pic_mask TICK_PIC_IRQ
+
 	mov [es:tick_enabled], BYTE 0
 	ret
 

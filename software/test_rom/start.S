@@ -93,14 +93,31 @@ _stack_setup:
 	usart_puts
 	call func_tick_once
 	call func_pit_wait
+	mov bx, str_ok
+	usart_puts
 
 	; Do it again to make sure EOI is working.
 	mov bx, str_intstest_second
 	usart_puts
 	call func_tick_once
 	call func_pit_wait
+	mov bx, str_ok
+	usart_puts
+
 	; Disable interrupts
 	cli
+	
+	pic_mask 1
+
+	mov bx, str_intstest_rtc
+	usart_puts
+	call func_rtc_init
+	call func_rtc_enableint
+	sti
+	hlt
+	cli
+	mov bx, str_ok
+	usart_puts
 
 ; Test loop
 	call func_console_init
@@ -110,8 +127,11 @@ _stack_setup:
 
 ; needs interrupts,... fixme
 	call func_display_init
-	call func_rtc_init
-	
+
+	mov bx, str_testbuzzer
+	usart_puts
+	call func_beep_boop
+
 	mov bx, str_testloop
 	usart_puts
 
@@ -119,7 +139,7 @@ _stack_setup:
 	mov al, 0x55
 	mov dl, 0
 shout:
-	;call func_beep_boop
+
 
 ; banner
 	mov bx, str_testloopinner
@@ -179,9 +199,14 @@ str_intssetup:
 str_intstest:
 	db `Testing interrupts\n\r`, 0
 str_intstest_first:
-	db `Waiting for first PIT int\n\r`, 0
+	db `Waiting for first PIT int... `, 0
 str_intstest_second:
-	db `Waiting for second PIT int\n\r`, 0	
+	db `Waiting for second PIT int... `, 0
+str_intstest_rtc:
+	db `Waiting for RTC int...`, 0
+
+str_testbuzzer:
+	db `Testing buzzer\n\r`, 0
 
 str_testloop:
 	db `Doing test loop...\n\r`, 0
@@ -189,6 +214,8 @@ str_testloopinner:
 	db `\n\r loop \n\r`, 0
 str_alivemsg:
 	db `.\n\r`, 0
+str_ok:
+	db ` OK!\n\r`, 0
 
 section .bss
 something:

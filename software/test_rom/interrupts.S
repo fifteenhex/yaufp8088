@@ -6,11 +6,10 @@
 %include "../common/usart_8251.S"
 %include "../common/memmap.S"
 %include "../common/interrupts.S"
+%include "interrupts_util.h"
+%include "util.h"
 
 section .text
-
-extern str_newline
-extern printhex
 
 ; Interrtupts init
 global func_interrupts_init
@@ -54,15 +53,6 @@ _inttablefill_exit:
 	pop es
 	ret
 
-%macro print_pic_reg 1
-	mov bx, %1
-	usart_puts
-	pop ax
-	call printhex
-	mov bx, str_newline
-	usart_puts
-%endmacro
-
 global badint_0
 
 %assign i 0
@@ -80,14 +70,7 @@ _badinthandler:
 	push bx
 	call printhex
 
-	; push the PIC registers onto the stack
-	mov ax, 0
-	pic_read_isr
-	push ax
-	pic_read_irr
-	push ax
-	pic_read_imr
-	push ax
+	pic_stack_regs
 
 	; End the interrupt and mask everything
 	pic_eoi
@@ -97,18 +80,9 @@ _badinthandler:
 	mov bx, str_newline
 	usart_puts
 
+	interrupts_dumppic
+
 	mov bx, str_canihazirq
-	usart_puts
-
-	; print the PIC IMR
-	print_pic_reg str_badint_imr
-	; print the PIC IRR
-	print_pic_reg str_badint_irr
-	; print the PIC ISR
-	print_pic_reg str_badint_isr
-
-
-	mov bx, str_newline
 	usart_puts
 
 	pop bx
@@ -123,6 +97,10 @@ divzerointhandler:
 	iret
 
 section .data
+
+global str_badint_imr
+global str_badint_irr
+global str_badint_isr
 
 str_badint_imr:
 	db `PIC IMR:`, 0

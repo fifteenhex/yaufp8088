@@ -22,6 +22,12 @@
 	out IOPORT_PIC_A0, al
 %endmacro
 
+%macro pic_mask 1
+	pic_read_imr
+	or al, (1 << %1)
+	out IOPORT_PIC_A0, al
+%endmacro
+
 %macro pic_unmask_all 0
 	mov al, 0
 	out IOPORT_PIC_A0, al
@@ -57,4 +63,15 @@
 	mov al,	(PIC_OCW3 | PIC_OCW3_RR | PIC_OCW3_RIS)
 	out IOPORT_PIC_NA0, al
 	in al, IOPORT_PIC_NA0
+%endmacro
+
+%macro pic_stack_regs 0
+	; push the PIC registers onto the stack
+	mov ax, 0
+	pic_read_isr
+	push ax
+	pic_read_irr
+	push ax
+	pic_read_imr
+	push ax
 %endmacro
