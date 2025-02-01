@@ -7,6 +7,8 @@
 %include "../common/memmap.S"
 %include "../common/interrupts.S"
 
+%define TICK_PIT_CHAN 1
+
 section .text
 
 global func_pit_wait
@@ -18,7 +20,7 @@ global func_tick_stop
 
 %macro pit_arm 0
 	; counter1, mode0, counter ~100ms
-	mov al, ((0x1 << PIT_CTRL_COUNTER_SHIFT) | PIT_CTRL_READLOAD_LSBMSB)
+	mov al, ((TICK_PIT_CHAN << PIT_CTRL_COUNTER_SHIFT) | PIT_CTRL_READLOAD_LSBMSB)
 	out IOPORT_PIT_CTRL, al
 	mov al, 0x24
 	out IOPORT_PIT_CNT1, al
@@ -30,6 +32,10 @@ func_tick_init:
 	push es
 	push bx
 
+	; Put the output into a known state
+	pit_go_low TICK_PIT_CHAN
+
+	mov [es:tick_enabled], BYTE 0
 	mov [es:ticks], WORD 0
 
 	; Point ES at the IVT
@@ -45,6 +51,11 @@ func_tick_init:
 
 func_tick_get:
 	mov ax, [es:ticks]
+	ret
+
+global func_tick_once
+func_tick_once:
+	pit_arm
 	ret
 
 func_tick_start:
@@ -66,11 +77,23 @@ func_pit_wait:
 
 tickinthandler:
 	push ax
-	add [es:ticks], WORD 1
+
+;	pic_seoi 1
 	pic_eoi
+	
+	; increment the tick count
+	add [es:ticks], WORD 1
 	cmp [es:tick_enabled], BYTE 0
-	je tickinthandler_out
+	je tickinthandler_clear
+
+	; re-arm the PIT
 	pit_arm
+	jmp tickinthandler_out
+
+tickinthandler_clear:
+	; Make the PIT output go low
+	pit_go_low TICK_PIT_CHAN
+
 tickinthandler_out:
 	pop ax
 	iret

@@ -8,9 +8,7 @@
 section .text
 
 %macro stop_bip 0
-	; set mode 0 so the output is low but never write the counter so it stays that way
-	mov al, ((0x2 << PIT_CTRL_COUNTER_SHIFT) | PIT_CTRL_READLOAD_LSBMSB)
-	out IOPORT_PIT_CTRL, al
+	pit_go_low 2
 %endmacro
 
 %macro do_bip 0

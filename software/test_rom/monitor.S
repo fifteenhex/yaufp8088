@@ -3,6 +3,7 @@
 [bits 16]
 
 %include "../common/memmap.S"
+%include "../common/usart_8251.S"
 
 section .text
 
@@ -30,5 +31,11 @@ func_monitor_init:
     ret
 
 nmihandler:
-    iret
+	mov bx, str_nmi
+	usart_puts
+	jmp $
+;    iret
     
+section .data
+str_nmi: db `\n\r-- NMI --\n\r`, 0
+

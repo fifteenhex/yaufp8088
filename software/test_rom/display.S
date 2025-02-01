@@ -21,6 +21,8 @@
 %define ILI9225_REG_RAMADDRESSSET_1	0x20
 %define ILI9225_REG_RAMADDRESSSET_2	0x21
 %define ILI9225_REG_GRAM			0x22
+%define ILI9225_REG_VSCROLLCTRL_1	0x31
+%define ILI9225_REG_VSCROLLCTRL_2	0x32
 %define ILI9225_REG_GAMMACTRL_1		0x50
 %define ILI9225_REG_GAMMACTRL_2		0x51
 %define ILI9225_REG_GAMMACTRL_3		0x52
@@ -60,8 +62,7 @@ global func_display_init
 	mov cx, FBSZ
 %%zzz0:
 	display_write_data 0
-	sub cx, 1
-	jne %%zzz0
+	loop %%zzz0
 %endmacro
 
 func_display_init:
@@ -111,8 +112,8 @@ func_display_init:
 	display_write_reg ILI9225_REG_RAMADDRESSSET_2,0x0000
 
 	display_write_reg 0x30,0x0000
-	display_write_reg 0x31,0x00DB
-	display_write_reg 0x32,0x0000
+	display_write_reg ILI9225_REG_VSCROLLCTRL_1,0x00DB
+	display_write_reg ILI9225_REG_VSCROLLCTRL_2,0x0000
 	display_write_reg 0x33,0x0000
 
 	display_write_reg 0x34,0x00DB

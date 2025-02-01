@@ -85,6 +85,13 @@ console_uart_rx_inthandler:
 	pop ax
 	iret
 
+global func_console_enableints
+func_console_enableints:
+	; Unmask uart rx/tx
+	pic_unmask 2
+	pic_unmask 5
+	ret
+	
 console_uart_tx_inthandler:
 	push ax
 	pic_eoi

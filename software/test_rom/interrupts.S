@@ -5,18 +5,30 @@
 %include "../common/pic_8259.S"
 %include "../common/usart_8251.S"
 %include "../common/memmap.S"
+%include "../common/interrupts.S"
 
 section .text
 
 extern str_newline
 extern printhex
 
-
 ; Interrtupts init
 global func_interrupts_init
 func_interrupts_init:
-_inttablefill:
 	push es
+
+_pic_setup:
+	mov al, (PIC_ICW1_SINGLE | PIC_ICW1_IC4 | PIC_ICW1)
+	out IOPORT_PIC_NA0, al
+	mov al, INTERRUPTS_PIC_VECT_BASE
+	out IOPORT_PIC_A0, al
+	mov al, (PIC_ICW4_UPM)
+	out IOPORT_PIC_A0, al
+
+	; Mask all
+	pic_mask_all
+
+_inttablefill:
 	; point es at the SRAM
 	mov ax, 0
 	mov es, ax
@@ -28,7 +40,7 @@ _inttablefill:
 	mov bx, MEMMAP_SEG_FLASH
 _inttablefill_next:
 	cmp ax, di
-	je _inittablefill_exit
+	je _inttablefill_exit
 	mov [es:di], si
 	add di, 2
 	mov [es:di], bx
@@ -37,7 +49,8 @@ _inttablefill_next:
 	add si, 8
 
 	jmp _inttablefill_next
-_inittablefill_exit:
+_inttablefill_exit:
+
 	pop es
 	ret
 

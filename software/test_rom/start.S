@@ -8,7 +8,6 @@
 %include "../common/usart_8251.S"
 %include "../common/pic_8259.S"
 %include "../common/memmap.S"
-%include "../common/interrupts.S"
 %include "../common/string.S"
 %include "console.h"
 %include "tick.h"
@@ -16,13 +15,13 @@
 %include "buzzer.h"
 %include "display.h"
 %include "rtc.h"
+%include "interrupts.h"
 
 global _main
 extern divzerointhandler
 extern str_newline
 extern printhex
 extern badint_0
-extern func_interrupts_init
 
 section .text
 _main:
@@ -71,59 +70,42 @@ _stack_setup:
 	mov ax, MEMMAP_SEG_BSS
 	mov es, ax
 
-
+; Install the default IVT
 	mov bx, str_intssetup
 	usart_puts
 	call func_interrupts_init
+
+; Install the NMI handler too
 	call func_monitor_init
 
-	mov al, (PIC_ICW1_SINGLE | PIC_ICW1_IC4 | PIC_ICW1)
-	out IOPORT_PIC_NA0, al
-	mov al, INTERRUPTS_PIC_VECT_BASE
-	out IOPORT_PIC_A0, al
-	mov al, (PIC_ICW4_UPM)
-	out IOPORT_PIC_A0, al
-
-	; Mask all
-	pic_mask_all
-
-	mov ax, 0
-	pic_read_imr
-	call printhex
-	mov bx, str_newline
-	usart_puts
-
-; Interrtupts test
+; Use the tick interrupt to test interrupts
 	mov bx, str_intstest
 	usart_puts
 
-	; Unmask tick
-	pic_unmask 1
-
-	mov ax, 0
-	pic_read_imr
-	call printhex
-	mov bx, str_newline
-	usart_puts
-
-	call func_console_init
 	call func_tick_init
-	call func_tick_start
 
 	; Enable interrupts
 	sti
-
+	; Unmask tick
+	pic_unmask 1
+	; Set up the PIT to fire
+	mov bx, str_intstest_first
+	usart_puts
+	call func_tick_once
 	call func_pit_wait
 
+	; Do it again to make sure EOI is working.
+	mov bx, str_intstest_second
+	usart_puts
+	call func_tick_once
+	call func_pit_wait
 	; Disable interrupts
 	cli
 
 ; Test loop
-	; Unmask uart rx/tx
-	pic_unmask 2
-	pic_unmask 5
-
-	; enable interrupts
+	call func_console_init
+	call func_tick_start
+; enable interrupts
 	sti
 
 ; needs interrupts,... fixme
@@ -193,8 +175,14 @@ str_sub:
 	db `Inside subroutine\n\r`, 0
 str_intssetup:
 	db `Setting up interrupts\n\r`, 0
+
 str_intstest:
 	db `Testing interrupts\n\r`, 0
+str_intstest_first:
+	db `Waiting for first PIT int\n\r`, 0
+str_intstest_second:
+	db `Waiting for second PIT int\n\r`, 0	
+
 str_testloop:
 	db `Doing test loop...\n\r`, 0
 str_testloopinner:

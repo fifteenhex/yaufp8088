@@ -1,8 +1,10 @@
-%define IOPORT_PIC		0x30
+; kate: syntax Intel x86 (NASM)
+
+%define IOPORT_PIC			0x30
 %define IOPORT_PIC_NA0		(IOPORT_PIC + 0)
 %define IOPORT_PIC_A0		(IOPORT_PIC + 1)
 
-%define PIC_ICW1		(1 << 4)
+%define PIC_ICW1			(1 << 4)
 %define PIC_ICW1_IC4		1
 %define PIC_ICW1_SINGLE		(1 << 1)
 
@@ -11,8 +13,8 @@
 %define PIC_OCW2_SEOI		(1 << 6)
 %define PIC_OCW2_EOI		(1 << 5)
 
-%define PIC_OCW3		(1 << 3)
-%define PIC_OCW3_RR		(1 << 1)
+%define PIC_OCW3			(1 << 3)
+%define PIC_OCW3_RR			(1 << 1)
 %define PIC_OCW3_RIS		1
 
 %macro pic_mask_all 0
@@ -33,6 +35,11 @@
 
 %macro pic_eoi 0
 	mov al, PIC_OCW2_EOI
+	out IOPORT_PIC_NA0, al
+%endmacro
+
+%macro pic_seoi 1
+	mov al, PIC_OCW2_SEOI | (%1 & 0x7)
 	out IOPORT_PIC_NA0, al
 %endmacro
 

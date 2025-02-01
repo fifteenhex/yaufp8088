@@ -2,6 +2,10 @@
 ; kate: replace-tabs off
 [bits 16]
 
+%include "../common/pic_8259.S"
+%include "../common/memmap.S"
+%include "../common/interrupts.S"
+
 %define IOPORT_RTC_BASE			0x50
 %define IOPORT_RTC_S1			IOPORT_RTC_BASE
 %define IOPORT_RTC_S10			(IOPORT_RTC_BASE + 0x1)
@@ -27,6 +31,7 @@
 global func_rtc_init
 func_rtc_init:
 	push ax
+	push es
 
 	mov al, 0
 	out IOPORT_RTC_CONTROL_F, al
@@ -37,16 +42,23 @@ func_rtc_init:
 	
 	;rtc_wait_busy
 	
+	
+	; Point ES at the IVT
+	mov bx, MEMMAP_SEG_IVT
+	mov es, bx
+	; insert rtc handler
+	mov bx, INTERRUPTS_PIC_IVT_IR7
+	mov [es:bx], WORD rtc_inthandler
+	
+	pop es
 	pop ax
 	ret
 
 global func_rtc_readsec
 func_rtc_readsec:
 	cli
+	push cx
 	xor ax, ax
-
-	mov al, 0
-	out IOPORT_RTC_CONTROL_D, al
 	
 	;rtc_wait_busy
 	
@@ -57,14 +69,25 @@ func_rtc_readsec:
 	in al, IOPORT_RTC_S10
 	and al, 0xf
 	mov ah, al
-	;shl ah, 4 - No idea why this crashes the system :D
-	shl ah, 1
-	shl ah, 1
-	shl ah, 1
-	shl ah, 1
+	mov cl, 4
+	shl ax, cl
 	in al, IOPORT_RTC_S1
 	and al, 0xf
 	or al, ah
 	and ax, 0xff
+	
+	pop cx
 	sti
 	ret
+
+global func_rtc_enableint:
+	pic_unmask 7
+	ret
+
+rtc_inthandler:
+	push ax
+	mov al, 0
+	out IOPORT_RTC_CONTROL_D, al
+	pic_eoi
+	pop ax
+	iret

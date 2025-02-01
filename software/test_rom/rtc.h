@@ -2,3 +2,4 @@
 
 extern func_rtc_init
 extern func_rtc_readsec
+extern func_rtc_enableint
