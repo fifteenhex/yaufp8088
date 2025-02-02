@@ -190,6 +190,8 @@ out:
 	call printhex
 
 	;call func_console_availablechars
+	call func_rtc_readmin
+	call printhex
 	call func_rtc_readsec
 	call printhex
 	;cmp ax, 0

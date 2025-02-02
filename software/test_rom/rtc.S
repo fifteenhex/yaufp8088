@@ -9,6 +9,17 @@
 %define IOPORT_RTC_BASE			0x50
 %define IOPORT_RTC_S1			IOPORT_RTC_BASE
 %define IOPORT_RTC_S10			(IOPORT_RTC_BASE + 0x1)
+%define IOPORT_RTC_M1			(IOPORT_RTC_BASE + 0x2)
+%define IOPORT_RTC_M10			(IOPORT_RTC_BASE + 0x3)
+%define IOPORT_RTC_H1			(IOPORT_RTC_BASE + 0x4)
+%define IOPORT_RTC_H10			(IOPORT_RTC_BASE + 0x5)
+%define IOPORT_RTC_D1			(IOPORT_RTC_BASE + 0x6)
+%define IOPORT_RTC_D10			(IOPORT_RTC_BASE + 0x7)
+%define IOPORT_RTC_MO1			(IOPORT_RTC_BASE + 0x8)
+%define IOPORT_RTC_MO10			(IOPORT_RTC_BASE + 0x9)
+%define IOPORT_RTC_Y1			(IOPORT_RTC_BASE + 0xa)
+%define IOPORT_RTC_Y10			(IOPORT_RTC_BASE + 0xb)
+%define IOPORT_RTC_W			(IOPORT_RTC_BASE + 0xc)
 %define IOPORT_RTC_CONTROL_D	(IOPORT_RTC_BASE + 0xd)
 %define CONTROL_D_HOLD			(1)
 %define CONTROL_D_BUSY			(1 << 1)
@@ -59,8 +70,21 @@ func_rtc_init:
 	popf
 	ret
 
+%macro rtc_get_bcd_pair 2
+	in al, %2
+	and al, 0xf
+	mov ah, al
+	mov cl, 4
+	shl ax, cl
+	in al, %1
+	and al, 0xf
+	or al, ah
+	and ax, 0xff
+%endmacro
+
 global func_rtc_readsec
 func_rtc_readsec:
+	pushf
 	cli
 	push cx
 	xor ax, ax
@@ -71,18 +95,23 @@ func_rtc_readsec:
 	;mov ah, al
 	;in al, IOPORT_RTC_CONTROL_F
 	
-	in al, IOPORT_RTC_S10
-	and al, 0xf
-	mov ah, al
-	mov cl, 4
-	shl ax, cl
-	in al, IOPORT_RTC_S1
-	and al, 0xf
-	or al, ah
-	and ax, 0xff
+	rtc_get_bcd_pair IOPORT_RTC_S1, IOPORT_RTC_S10
+
+	pop cx
+	popf
+	ret
+
+global func_rtc_readmin
+func_rtc_readmin:
+	pushf
+	cli
+	push cx
+	xor ax, ax
+
+	rtc_get_bcd_pair IOPORT_RTC_M1, IOPORT_RTC_M10
 	
 	pop cx
-	sti
+	popf
 	ret
 
 global func_rtc_wait

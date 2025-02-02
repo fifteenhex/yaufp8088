@@ -1,3 +1,5 @@
+; kate: syntax Intel x86 (NASM)
+
 %define IOPORT_USART		0x20
 %define IOPORT_USART_DATA	(IOPORT_USART + 0)
 %define IOPORT_USART_CMD	(IOPORT_USART + 1)

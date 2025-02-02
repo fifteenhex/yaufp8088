@@ -1,3 +1,5 @@
+; kate: syntax Intel x86 (NASM)
+
 %define IOPORT_PIO		0x00
 %define IOPORT_PIO_PORTA	IOPORT_PIO + 0
 %define IOPORT_PIO_PORTB	IOPORT_PIO + 1
