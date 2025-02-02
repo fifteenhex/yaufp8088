@@ -7,3 +7,6 @@ extern func_tick_once
 extern func_tick_start
 extern func_tick_get
 extern func_tick_stop
+
+extern tick_enabled
+extern ticks

@@ -16,10 +16,10 @@
 %include "display.h"
 %include "rtc.h"
 %include "interrupts.h"
+%include "util.h"
 
 global _main
 extern divzerointhandler
-extern str_newline
 extern printhex
 extern badint_0
 
@@ -103,35 +103,63 @@ _stack_setup:
 	call func_pit_wait
 	mov bx, str_ok
 	usart_puts
-
+	
 	; Disable interrupts
 	cli
 	
 	pic_mask 1
+
+; tick test
+	mov bx, str_intstest_tick
+	usart_puts
+	call func_tick_start
+	sti
+
+	mov cx, 10
+_tick_test_next:
+	call func_pit_wait
+	mov ax, '.'
+	usart_putch
+	loop _tick_test_next
+
+	cli
+	call func_tick_stop
+	mov bx, str_ok
+	usart_puts
+
 
 	mov bx, str_intstest_rtc
 	usart_puts
 	call func_rtc_init
 	call func_rtc_enableint
 	sti
-	hlt
+	call func_rtc_wait
 	cli
 	mov bx, str_ok
 	usart_puts
 
-; Test loop
-	call func_console_init
-	call func_tick_start
-; enable interrupts
+; Need tick for following tests
 	sti
+	call func_tick_start
 
-; needs interrupts,... fixme
-	call func_display_init
-
+; buzzer
 	mov bx, str_testbuzzer
 	usart_puts
 	call func_beep_boop
+	mov bx, str_ok
+	usart_puts
 
+;display
+	mov bx, str_testdisplay
+	usart_puts
+	call func_display_init
+	mov bx, str_ok
+	usart_puts
+
+; left over inits before looping
+	call func_console_init
+
+; Test loop
 	mov bx, str_testloop
 	usart_puts
 
@@ -149,18 +177,12 @@ shout:
 	mov al, dl
 	out IOPORT_DBG, al
 
-	mov ax, 100
+	mov cx, 5
 waitloop:
-	cmp ax, 0
-	je out
-	;call func_pit_wait
-	push ax
 	mov ax, '.'
 	usart_putch
-	pop ax
-	call func_pit_wait
-	sub ax, 1
-	jmp waitloop
+	call func_rtc_wait
+	loop waitloop
 	
 out:
 	add dl, 1
@@ -186,7 +208,7 @@ test_sub:
 section .data
 
 str_banner:
-	db `-- Test ROM --\n\r`, 0
+	db `\n\r-- Test ROM --\n\r`, 0
 str_clearing_ram:
 	db `Clearing SRAM\n\r`, 0
 str_stack:
@@ -202,11 +224,17 @@ str_intstest_first:
 	db `Waiting for first PIT int... `, 0
 str_intstest_second:
 	db `Waiting for second PIT int... `, 0
+str_intstest_tick:
+	db `Testing continous tick int `, 0
+
 str_intstest_rtc:
 	db `Waiting for RTC int...`, 0
 
 str_testbuzzer:
-	db `Testing buzzer\n\r`, 0
+	db `Testing buzzer... `, 0
+
+str_testdisplay:
+	db `Testing display... `, 0
 
 str_testloop:
 	db `Doing test loop...\n\r`, 0

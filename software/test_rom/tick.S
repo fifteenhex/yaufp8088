@@ -12,13 +12,6 @@
 
 section .text
 
-global func_pit_wait
-global tickinthandler
-global func_tick_init
-global func_tick_start
-global func_tick_get
-global func_tick_stop
-
 %macro pit_arm 0
 	; counter1, mode0, counter ~100ms
 	mov al, ((TICK_PIT_CHAN << PIT_CTRL_COUNTER_SHIFT) | PIT_CTRL_READLOAD_LSBMSB)
@@ -29,7 +22,11 @@ global func_tick_stop
 	out IOPORT_PIT_CNT1, al
 %endmacro
 
+global func_tick_init
 func_tick_init:
+	pushf
+	cli
+
 	push es
 	push bx
 
@@ -48,8 +45,10 @@ func_tick_init:
 
 	pop bx
 	pop es
+	popf
 	ret
 
+global func_tick_get
 func_tick_get:
 	mov ax, [es:ticks]
 	ret
@@ -59,33 +58,51 @@ func_tick_once:
 	pit_arm
 	ret
 
+global func_tick_start
 func_tick_start:
 	push ax
+
+	mov [es:tick_enabled], BYTE 1
 
 	pic_unmask TICK_PIC_IRQ
 
 	pit_arm
-	mov [es:tick_enabled], BYTE 1
+
 	pop ax
 	ret
 
+global func_pit_wait
+func_pit_wait:
+	push ax
+	; load the current ticks value
+	mov ax, WORD [es:ticks]
+
+_pit_wait:
+	; Wait for an int, hopefully the tick int
+	hlt
+	; Has the ticks count changed?
+	cmp ax, WORD [es:ticks]
+	; Nope, must have been something else
+	je _pit_wait
+
+	pop ax
+	ret
+
+global func_tick_stop
 func_tick_stop:
+	push ax
+
+	pit_go_low TICK_PIT_CHAN
+	
 	pic_mask TICK_PIC_IRQ
 
 	mov [es:tick_enabled], BYTE 0
-	ret
 
-func_pit_wait:
-	; Wait for the int
-	hlt
-
+	pop ax
 	ret
 
 tickinthandler:
 	push ax
-
-;	pic_seoi 1
-	pic_eoi
 	
 	; increment the tick count
 	add [es:ticks], WORD 1
@@ -101,11 +118,14 @@ tickinthandler_clear:
 	pit_go_low TICK_PIT_CHAN
 
 tickinthandler_out:
+	pic_seoi 1
 	pop ax
 	iret
 
 section .bss
+global tick_enabled
 tick_enabled:
 	resb 1
+global ticks
 ticks:
 	resw 1

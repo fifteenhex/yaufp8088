@@ -5,14 +5,16 @@
 %include "../common/pit_8253.S"
 %include "tick.h"
 
+%define BUZZER_PIT_CHAN	2
+
 section .text
 
 %macro stop_bip 0
-	pit_go_low 2
+	pit_go_low BUZZER_PIT_CHAN
 %endmacro
 
 %macro do_bip 0
-	mov al, ((0x2 << PIT_CTRL_COUNTER_SHIFT) | PIT_CTRL_READLOAD_LSBMSB | (0x3 << PIT_CTRL_MODE_SHIFT))
+	mov al, ((BUZZER_PIT_CHAN << PIT_CTRL_COUNTER_SHIFT) | PIT_CTRL_READLOAD_LSBMSB | (0x3 << PIT_CTRL_MODE_SHIFT))
 	out IOPORT_PIT_CTRL, al
 	mov al, 0xc9
 	out IOPORT_PIT_CNT2, al

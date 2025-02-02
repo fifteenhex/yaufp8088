@@ -45,7 +45,7 @@
 %endmacro
 
 %macro pic_seoi 1
-	mov al, PIC_OCW2_SEOI | (%1 & 0x7)
+	mov al, (PIC_OCW2_SEOI | PIC_OCW2_EOI | (%1 & 0x7))
 	out IOPORT_PIC_NA0, al
 %endmacro
 

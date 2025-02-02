@@ -4,6 +4,9 @@ all: rom_512k.img
 common:
 	$(MAKE) -C ../common
 
+../common/includes.stamp:
+	$(MAKE) -C ../common includes.stamp
+
 start.o: start.S
 	nasm -wall -g -felf -o $@ $<
 
@@ -16,13 +19,13 @@ interrupts.o: interrupts.S
 console.o: console.S
 	nasm -wall -g -felf -o $@ $<
 
-tick.o: tick.S
+tick.o: tick.S tick.h ../common/includes.stamp
 	nasm -wall -g -felf -o $@ $<
 
 buzzer.o: buzzer.S
 	nasm -wall -g -felf -o $@ $<
 
-monitor.o: monitor.S
+monitor.o: monitor.S ../common/includes.stamp
 	nasm -wall -g -felf -o $@ $<
 
 display.o: display.S

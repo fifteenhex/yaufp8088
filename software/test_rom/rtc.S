@@ -30,6 +30,10 @@
 
 global func_rtc_init
 func_rtc_init:
+	pushf
+
+	cli
+
 	push ax
 	push es
 
@@ -52,6 +56,7 @@ func_rtc_init:
 	
 	pop es
 	pop ax
+	popf
 	ret
 
 global func_rtc_readsec
@@ -80,6 +85,24 @@ func_rtc_readsec:
 	sti
 	ret
 
+global func_rtc_wait
+func_rtc_wait:
+	push ax
+
+	; load the current ints value
+	mov ax, WORD [es:rtc_ints]
+
+_rtc_wait:
+	; Wait for an int, hopefully the rtc int
+	hlt
+	; Has the int count changed?
+	cmp ax, WORD [es:rtc_ints]
+	; Nope, must have been something else
+	je _rtc_wait
+
+	pop ax
+	ret	
+
 global func_rtc_enableint
 func_rtc_enableint:
 	pic_unmask 7
@@ -87,8 +110,18 @@ func_rtc_enableint:
 
 rtc_inthandler:
 	push ax
+
+	; increment the int count
+	add [es:rtc_ints], WORD 1
+
 	mov al, 0
 	out IOPORT_RTC_CONTROL_D, al
+
 	pic_seoi 7
+
 	pop ax
 	iret
+
+section .bss
+rtc_ints:
+	resw 1

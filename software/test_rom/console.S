@@ -11,6 +11,9 @@ section .text
 
 global func_console_init
 func_console_init:
+	pushf
+	cli
+
 	push es
 	push bx
 	
@@ -30,8 +33,9 @@ func_console_init:
 	mov bx, INTERRUPTS_PIC_IVT_IR5
 	mov [es:bx], WORD console_uart_tx_inthandler
 	
-	pop es
 	pop bx
+	pop es
+	popf
 	ret
 
 global func_console_availablechars
