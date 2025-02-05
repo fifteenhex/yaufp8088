@@ -14,13 +14,13 @@
 %include "monitor.h"
 %include "buzzer.h"
 %include "display.h"
+%include "display_util.h"
 %include "rtc.h"
 %include "interrupts.h"
 %include "util.h"
 
 global _main
 extern divzerointhandler
-extern printhex
 extern badint_0
 
 section .text
@@ -177,7 +177,7 @@ shout:
 	mov al, dl
 	out IOPORT_DBG, al
 
-	mov cx, 5
+	mov cx, 3
 waitloop:
 	mov ax, '.'
 	usart_putch
@@ -198,6 +198,15 @@ out:
 	;je noch
 	;call func_console_getch
 	;usart_putch
+
+	display_set_window_h (8 * 2), (8 * 3)
+	display_set_window_v (8 * 2), (8 * 3)
+	display_write_reg ILI9225_REG_RAMADDRESSSET_1,(8 * 2)
+	display_write_reg ILI9225_REG_RAMADDRESSSET_2,(8 * 2)
+	mov ax, 0xffff
+	mov cx, (8 * 8) * 2
+	call func_display_fill_rect
+
 noch:
 
 	jmp shout

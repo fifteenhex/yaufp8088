@@ -1,8 +1,10 @@
 all: rom_512k.img
 
-.PHONY: common
+.PHONY: common gfx
 common:
 	$(MAKE) -C ../common
+gfx:
+	$(MAKE) -C ../gfx
 
 ../common/includes.stamp:
 	$(MAKE) -C ../common includes.stamp
@@ -42,12 +44,13 @@ OBJS=start.o \
 	   monitor.o \
 	   buzzer.o \
 	   display.o \
-	   rtc.o
+	   rtc.o \
 
-start.elf: $(OBJS) rom.ld common
-	ld -melf_i386 --no-check-sections -T rom.ld -o $@ \
-		$(OBJS) \
-		../common/reset.o
+SHAREDOBJS=../common/reset.o \
+	  ../gfx/textrender.o
+
+start.elf: gfx common $(OBJS) rom.ld
+	ld -melf_i386 --no-check-sections -T rom.ld -o $@ $(OBJS) $(SHAREDOBJS)
 
 start.bin: start.elf
 	objcopy --gap-fill=0xff -O binary $< $@
