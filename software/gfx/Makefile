@@ -1,5 +1,8 @@
 .PHONY: all
-all: textrender.o
+all: display.o textrender.o
+
+display.o: display.S
+	nasm -wall -g -felf -o $@ $<
 
 textrender.o: textrender.S XGA_8x16.bin
 	nasm -wall -g -felf -o $@ $<

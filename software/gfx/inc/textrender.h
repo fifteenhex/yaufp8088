@@ -1,0 +1,2 @@
+EXPORT_FUNC textrender_init
+EXPORT_FUNC textrender_redraw

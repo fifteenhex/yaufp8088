@@ -4,7 +4,7 @@
 
 %include "../common/pio_8255.S"
 %include "../common/templates.h"
-%include "tick.h"
+%include "../time/tick.h"
 
 %include "display_util.h"
 
