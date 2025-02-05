@@ -1,8 +1,10 @@
 all: rom_512k.img
 
-.PHONY: common time gfx
+.PHONY: common audio time gfx
 common:
 	$(MAKE) -C ../common
+audio:
+	$(MAKE) -C ../audio
 time:
 	$(MAKE) -C ../time
 gfx:
@@ -12,7 +14,7 @@ gfx:
 	$(MAKE) -C ../common includes.stamp
 
 start.o: start.S
-	nasm -wall -g -felf -i ../time/inc -i ../gfx/inc -o $@ $<
+	nasm -wall -g -felf -i ../audio/inc -i ../time/inc -i ../gfx/inc -o $@ $<
 
 util.o: util.S
 	nasm -wall -g -felf -o $@ $<
@@ -23,10 +25,6 @@ interrupts.o: interrupts.S
 console.o: console.S
 	nasm -wall -g -felf -o $@ $<
 
-
-buzzer.o: buzzer.S
-	nasm -wall -g -i ../time/inc -felf -o $@ $<
-
 monitor.o: monitor.S ../common/includes.stamp
 	nasm -wall -g -i ../time/inc -felf -o $@ $<
 
@@ -34,16 +32,16 @@ OBJS=start.o \
 	   util.o \
 	   console.o \
 	   interrupts.o \
-	   monitor.o \
-	   buzzer.o
+	   monitor.o
 
 SHAREDOBJS=../common/reset.o \
+	  ../audio/buzzer.o \
 	  ../time/tick.o \
 	  ../time/rtc.o \
 	  ../gfx/display.o \
 	  ../gfx/textrender.o
 
-start.elf: time gfx common $(OBJS) rom.ld
+start.elf: audio time gfx common $(OBJS) rom.ld
 	ld -melf_i386 --no-check-sections -T rom.ld -o $@ $(OBJS) $(SHAREDOBJS)
 
 start.bin: start.elf
