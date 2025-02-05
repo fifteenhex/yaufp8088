@@ -2,6 +2,7 @@
 ; kate: replace-tabs off
 [bits 16]
 
+%include "../common/templates.h"
 %include "../common/debug.S"
 %include "../common/pio_8255.S"
 %include "../common/pit_8253.S"
@@ -9,6 +10,7 @@
 %include "../common/pic_8259.S"
 %include "../common/memmap.S"
 %include "../common/string.S"
+%include "textrender.h"
 %include "console.h"
 %include "tick.h"
 %include "monitor.h"
@@ -157,6 +159,7 @@ _tick_test_next:
 	usart_puts
 
 ; left over inits before looping
+	call func_textrender_init
 	call func_console_init
 
 ; Test loop
@@ -199,13 +202,15 @@ out:
 	;call func_console_getch
 	;usart_putch
 
-	display_set_window_h (8 * 2), (8 * 3)
-	display_set_window_v (8 * 2), (8 * 3)
-	display_write_reg ILI9225_REG_RAMADDRESSSET_1,(8 * 2)
-	display_write_reg ILI9225_REG_RAMADDRESSSET_2,(8 * 2)
-	mov ax, 0xffff
-	mov cx, (8 * 8) * 2
-	call func_display_fill_rect
+	;display_set_window_h (8 * 2), (8 * 3)
+	;display_set_window_v (8 * 2), (8 * 3)
+	;display_write_reg ILI9225_REG_RAMADDRESSSET_1,(8 * 2)
+	;display_write_reg ILI9225_REG_RAMADDRESSSET_2,(8 * 2)
+	;mov ax, 0xffff
+	;mov cx, (8 * 8) * 2
+	;call func_display_fill_rect
+	
+	call func_textrender_redraw
 
 noch:
 

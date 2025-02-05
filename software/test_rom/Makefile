@@ -1,8 +1,10 @@
 all: rom_512k.img
 
-.PHONY: common gfx
+.PHONY: common time gfx
 common:
 	$(MAKE) -C ../common
+time:
+	$(MAKE) -C ../time
 gfx:
 	$(MAKE) -C ../gfx
 
@@ -10,7 +12,7 @@ gfx:
 	$(MAKE) -C ../common includes.stamp
 
 start.o: start.S
-	nasm -wall -g -felf -o $@ $<
+	nasm -wall -g -felf -i ../time/inc -i ../gfx/inc -o $@ $<
 
 util.o: util.S
 	nasm -wall -g -felf -o $@ $<
@@ -21,35 +23,27 @@ interrupts.o: interrupts.S
 console.o: console.S
 	nasm -wall -g -felf -o $@ $<
 
-tick.o: tick.S tick.h ../common/includes.stamp
-	nasm -wall -g -felf -o $@ $<
 
 buzzer.o: buzzer.S
-	nasm -wall -g -felf -o $@ $<
+	nasm -wall -g -i ../time/inc -felf -o $@ $<
 
 monitor.o: monitor.S ../common/includes.stamp
-	nasm -wall -g -felf -o $@ $<
-
-display.o: display.S
-	nasm -wall -g -felf -o $@ $<
-
-rtc.o: rtc.S
-	nasm -wall -g -felf -o $@ $<
+	nasm -wall -g -i ../time/inc -felf -o $@ $<
 
 OBJS=start.o \
 	   util.o \
 	   console.o \
 	   interrupts.o \
-	   tick.o \
 	   monitor.o \
-	   buzzer.o \
-	   display.o \
-	   rtc.o \
+	   buzzer.o
 
 SHAREDOBJS=../common/reset.o \
+	  ../time/tick.o \
+	  ../time/rtc.o \
+	  ../gfx/display.o \
 	  ../gfx/textrender.o
 
-start.elf: gfx common $(OBJS) rom.ld
+start.elf: time gfx common $(OBJS) rom.ld
 	ld -melf_i386 --no-check-sections -T rom.ld -o $@ $(OBJS) $(SHAREDOBJS)
 
 start.bin: start.elf
