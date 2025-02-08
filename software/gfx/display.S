@@ -4,7 +4,8 @@
 
 %include "../common/pio_8255.S"
 %include "../common/templates.h"
-%include "../time/tick.h"
+%include "../common/string.S"
+%include "tick.h"
 
 %include "display_util.h"
 
@@ -110,35 +111,29 @@ bloop:
 
 	;display_set_partial_drv 10,30
 
-	display_set_verticalscroll_start_end 0, 32
-	display_set_verticalscroll_amount 31
+	;display_set_verticalscroll_start_end 0, 32
+	;display_set_verticalscroll_amount 31
 	
 	pop cx
 	pop ax
 	ret
 
-; fill value in AX
-; length of fill in CX
-global func_display_fill_rect
-func_display_fill_rect:
+; ax - fill value
+; cx - fill length in blocks of 64
+GLOBAL_FUNC display_fill_rect
 	push dx
 	mov dx, ax
 	display_set_index ILI9225_REG_GRAM
 	mov ax, dx
 
 	mov dx,IOPORT_DISPLAY_DATA
-_next_64_block:
-	%rep 64
-		out dx, ax
-	%endrep
-		loop _next_64_block
+	outfill_blk_word_64
 
 	pop dx
 	ret
 
 ; fill value in ax
-global func_display_fill_screen
-func_display_fill_screen:
+GLOBAL_FUNC display_fill_screen
 	mov cx, ax
 	display_write_reg ILI9225_REG_RAMADDRESSSET_1,0x0000
 	display_write_reg ILI9225_REG_RAMADDRESSSET_2,0x0000

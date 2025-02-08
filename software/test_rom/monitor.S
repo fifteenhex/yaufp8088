@@ -57,15 +57,23 @@ func_monitor_init:
 
 nmihandler:
 	pic_stack_regs
+	push di
+	push si
 	push es
+	push ss
 	push ds
+	push cs
 
 	mov bx, str_nmi
 	usart_puts
 
+	print_label_pop_hex_value str_reg_cs
 	print_label_pop_hex_value str_reg_ds
+	print_label_pop_hex_value str_reg_ss
 	print_label_pop_hex_value str_reg_es
-
+	print_label_pop_hex_value str_reg_si
+	print_label_pop_hex_value str_reg_di
+	
 	interrupts_dumppic 
 
 	print_label_hex_value str_tick_enabled,tick_enabled
@@ -76,8 +84,12 @@ nmihandler:
     
 section .data
 str_nmi: db `\n\r-- NMI --\n\r`, 0
+str_reg_cs: db `cs: `, 0
 str_reg_ds: db `ds: `, 0
+str_reg_ss: db `ss: `, 0
 str_reg_es: db `es: `, 0
+str_reg_si: db `si: `, 0
+str_reg_di: db `di: `, 0
 str_tick_enabled: db `tick enabled: `, 0
 str_tick_ticks: db `ticks: `, 0
 

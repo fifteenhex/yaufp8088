@@ -1,7 +1,7 @@
 MEMORY
 {
 	code (x)  : ORIGIN = 0, LENGTH = 8K
-	data (r)  : ORIGIN = 0, LENGTH = 8K
+	data (r)  : ORIGIN = 0, LENGTH = 32K
 	reset (x) : ORIGIN = 0, LENGTH = 16
 	bss (rw) : ORIGIN = 0, LENGTH = 8K
 }

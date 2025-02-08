@@ -209,7 +209,7 @@ out:
 	;mov ax, 0xffff
 	;mov cx, (8 * 8) * 2
 	;call func_display_fill_rect
-	
+
 	call func_textrender_redraw
 
 noch:

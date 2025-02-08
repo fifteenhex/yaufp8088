@@ -2,7 +2,7 @@
 all: display.o textrender.o
 
 display.o: display.S
-	nasm -wall -g -felf -o $@ $<
+	nasm -wall -g -i ../time/inc -i ./inc -felf -o $@ $<
 
 textrender.o: textrender.S XGA_8x16.bin
 	nasm -wall -g -felf -o $@ $<
