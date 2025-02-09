@@ -1,3 +1,5 @@
 EXPORT_FUNC textrender_init
 EXPORT_FUNC textrender_reset
+EXPORT_FUNC textrender_putch
+EXPORT_FUNC textrender_puts
 EXPORT_FUNC textrender_redraw

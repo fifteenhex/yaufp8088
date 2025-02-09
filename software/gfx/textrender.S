@@ -26,12 +26,12 @@ GLOBAL_FUNC textrender_init
 
 	mov [es:textrender_flags], BYTE 0
 	mov [es:textrender_cursor_col], WORD 0
-	mov [es:textrender_cursor_row], BYTE 0
+	mov [es:textrender_cursor_row], WORD 0
 
 	mov cx, TEXT_TOTAL
 	mov si, textrender_charmap
 _loop:
-	mov [es:si], BYTE '_'
+	mov [es:si], BYTE ' '
 	inc si
 	loop _loop
 
@@ -127,10 +127,6 @@ display_set_window_v_row_%+r:
 %endmacro
 
 STATIC_FUNC textrender_override_char_for_cursor
-	; is this the odd frame?
-	mov bx, [es:textrender_flags]
-	and bx, TEXT_FLAG_ODDFRAME
-
 	; is this the cursor?
 	mov bx, [es:textrender_drawing_col]
 	cmp bx, [es:textrender_cursor_col]
@@ -138,7 +134,13 @@ STATIC_FUNC textrender_override_char_for_cursor
 	mov bx, [es:textrender_drawing_row]
 	cmp bx, [es:textrender_cursor_row]
 	jne _override_out
+
+	; is this the odd frame?
+	test BYTE [es:textrender_flags], TEXT_FLAG_ODDFRAME
+	je _override_odd
+
 	mov al, 0xfe
+_override_odd:
 _override_out:
 	ret
 
@@ -175,6 +177,32 @@ GLOBAL_FUNC textrender_reset
 	mov [es:textrender_cursor_row], BYTE 0
 	ret
 
+%macro textrender_putch_updatecursor 0
+	; increment col, see if its at the limit
+	mov al, BYTE [es:textrender_cursor_col]
+	inc al
+	cmp al, TEXT_COLS
+	jne %%set_col
+
+	; col has wrapped, check the row
+	mov al, BYTE [es:textrender_cursor_row]
+	inc al
+	cmp al, TEXT_ROWS
+	jne %%set_row
+	mov al, 0
+
+%%set_row:
+	mov BYTE [es:textrender_cursor_row], al
+	; if we set the row then col has to be zero
+	mov al, 0
+%%set_col:
+	mov BYTE [es:textrender_cursor_col], al
+%endmacro
+
+GLOBAL_FUNC textrender_putch
+	textrender_putch_updatecursor
+	ret
+
 GLOBAL_FUNC textrender_redraw
 	push cx
 	push si
@@ -191,6 +219,9 @@ _redraw_row:
 	textrender_redraw_cols
 	inc BYTE [es:textrender_drawing_row]
 	loop _redraw_row
+
+	; flag update
+	xor BYTE [es:textrender_flags], TEXT_FLAG_ODDFRAME
 
 	pop si
 	pop cx
@@ -240,15 +271,23 @@ textrender_charmap:
 	resb TEXT_TOTAL
 textrender_flags:
 	resb 1
+
+; Where the rendering code is on the screen
 textrender_drawing_col:
 	resb 1
-; dummy
+; dummy - must be zero!
 	resb 1
 textrender_drawing_row:
 	resb 1
-; dummy
+; dummy - must be zero!
 	resb 1
+
+; Where the cursor is on the screen
 textrender_cursor_col:
 	resb 1
+; dummy - must be zero!
+	resb 1
 textrender_cursor_row:
+	resb 1
+; dummy - must be zero!
 	resb 1

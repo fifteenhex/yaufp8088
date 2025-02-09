@@ -180,11 +180,18 @@ shout:
 	mov al, dl
 	out IOPORT_DBG, al
 
-	mov cx, 3
+	mov cx, 50
 waitloop:
 	mov ax, '.'
 	usart_putch
-	call func_rtc_wait
+
+	mov ax, '.'
+	call func_textrender_putch
+
+	call func_pit_wait
+
+	call func_textrender_redraw
+
 	loop waitloop
 	
 out:
@@ -209,8 +216,6 @@ out:
 	;mov ax, 0xffff
 	;mov cx, (8 * 8) * 2
 	;call func_display_fill_rect
-
-	call func_textrender_redraw
 
 noch:
 
