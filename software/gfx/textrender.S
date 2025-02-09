@@ -16,15 +16,22 @@
 %define TEXT_COLOUR_FG	0xffff
 %define TEXT_COLOUR_BG	0x0000
 
+; toggles on and off each frame
+%define TEXT_FLAG_ODDFRAME	(1)
+
 section .text
 GLOBAL_FUNC textrender_init
 	push cx
 	push si
 
+	mov [es:textrender_flags], BYTE 0
+	mov [es:textrender_cursor_col], WORD 0
+	mov [es:textrender_cursor_row], BYTE 0
+
 	mov cx, TEXT_TOTAL
 	mov si, textrender_charmap
 _loop:
-	mov [es:si], BYTE 'C'
+	mov [es:si], BYTE '_'
 	inc si
 	loop _loop
 
@@ -66,17 +73,14 @@ _loop:
 %endmacro
 
 STATIC_FUNC textrender_move_window_col
-	xor ax, ax
-	mov al, BYTE [es:textrender_drawing_col]
-	mov cl, 5
-	shl ax, cl
-	mov bx, display_set_window_h_col_0
-	add bx, ax
-	jmp bx
+	mov di, WORD [es:textrender_drawing_col]
+	shl di, 1
+	mov bx, move_col_funcs
+	mov ax, [bx+di]
+	jmp ax
 
 %assign c 0
 %rep TEXT_COLS
-align 0x20
 display_set_window_h_col_%+c:
 	display_set_window_h (8 * c), ((8 * c) + 7)
 	display_write_reg ILI9225_REG_RAMADDRESSSET_1,(8 * c)
@@ -86,22 +90,17 @@ display_set_window_h_col_%+c:
 
 ; This is a bit too fat to inline
 STATIC_FUNC textrender_move_window_row
-	push cx
-	xor ax, ax
-	mov al, BYTE [es:textrender_drawing_row]
-	mov cl, 5
-	shl ax, cl
-	mov bx, display_set_window_v_row_0
-	add bx, ax
-	jmp bx
+	mov di, WORD [es:textrender_drawing_row]
+	shl di, 1
+	mov bx, move_row_funcs
+	mov ax, [bx+di]
+	jmp ax
 
 %assign r 0
 %rep TEXT_ROWS
-align 0x20
 display_set_window_v_row_%+r:
 	display_set_window_v (16 * r), ((16 * r) + 15)
 	display_write_reg ILI9225_REG_RAMADDRESSSET_2, (16 * r)
-	pop cx
 	ret
 %assign r r+1
 %endrep
@@ -127,6 +126,22 @@ display_set_window_v_row_%+r:
 	pop cx
 %endmacro
 
+STATIC_FUNC textrender_override_char_for_cursor
+	; is this the odd frame?
+	mov bx, [es:textrender_flags]
+	and bx, TEXT_FLAG_ODDFRAME
+
+	; is this the cursor?
+	mov bx, [es:textrender_drawing_col]
+	cmp bx, [es:textrender_cursor_col]
+	jne _override_out
+	mov bx, [es:textrender_drawing_row]
+	cmp bx, [es:textrender_cursor_row]
+	jne _override_out
+	mov al, 0xfe
+_override_out:
+	ret
+
 ; si - points at the current position in the char map
 %macro textrender_redraw_cols 0
 	push cx
@@ -143,6 +158,9 @@ display_set_window_v_row_%+r:
 	mov al, [es:si]
 	inc si
 
+	call func_textrender_override_char_for_cursor
+
+%%draw:
 	textrender_draw_char
 
 	inc BYTE [es:textrender_drawing_col]
@@ -150,7 +168,13 @@ display_set_window_v_row_%+r:
 
 	pop cx
 %endmacro
-	
+
+GLOBAL_FUNC textrender_reset
+	mov [es:textrender_flags], BYTE 0
+	mov [es:textrender_cursor_col], BYTE 0
+	mov [es:textrender_cursor_row], BYTE 0
+	ret
+
 GLOBAL_FUNC textrender_redraw
 	push cx
 	push si
@@ -197,11 +221,34 @@ precomp:
 %assign i i+1
 %endrep
 
+move_col_funcs:
+%assign c 0
+%rep TEXT_COLS
+	dw display_set_window_h_col_%+c
+%assign c c+1
+%endrep
+
+move_row_funcs:
+%assign r 0
+%rep TEXT_ROWS
+	dw display_set_window_v_row_%+r
+%assign r r+1
+%endrep
+
 section .bss
 textrender_charmap:
 	resb TEXT_TOTAL
+textrender_flags:
+	resb 1
 textrender_drawing_col:
+	resb 1
+; dummy
 	resb 1
 textrender_drawing_row:
 	resb 1
-
+; dummy
+	resb 1
+textrender_cursor_col:
+	resb 1
+textrender_cursor_row:
+	resb 1
