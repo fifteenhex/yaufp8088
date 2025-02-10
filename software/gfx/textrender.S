@@ -22,8 +22,7 @@
 ; toggles on and off each frame
 %define TEXT_FLAG_ODDFRAME	(1)
 
-section .text
-GLOBAL_FUNC textrender_init
+GLOBAL_FUNC textrender_reset
 	push cx
 	push si
 
@@ -32,15 +31,29 @@ GLOBAL_FUNC textrender_init
 	mov [es:textrender_cursor_row], WORD 0
 	mov [es:textrender_cursor_pos], WORD 0
 
+	; clear the charmap
 	mov cx, TEXT_TOTAL
 	mov si, textrender_charmap
-_loop:
+_textrender_reset_charmap_clear:
 	mov [es:si], BYTE ' '
 	inc si
-	loop _loop
+	loop _textrender_reset_charmap_clear
+
+	; clear the charmap flags
+	mov cx, TEXT_TOTAL
+	mov si, textrender_charmap_flags
+_textrender_reset_charmapflags_clear:
+	mov [es:si], BYTE 0
+	inc si
+	loop _textrender_reset_charmapflags_clear
 
 	pop si
 	pop cx
+	ret
+
+section .text
+GLOBAL_FUNC textrender_init
+	call func_textrender_reset
 	ret
 
 %macro textrender_draw_char_bitmap 0
@@ -176,12 +189,6 @@ _override_out:
 	pop cx
 %endmacro
 
-GLOBAL_FUNC textrender_reset
-	mov [es:textrender_flags], BYTE 0
-	mov [es:textrender_cursor_col], BYTE 0
-	mov [es:textrender_cursor_row], BYTE 0
-	ret
-
 %macro textrender_putch_insertchar 0
 	mov bx, textrender_charmap
 	mov di, WORD [es:textrender_cursor_pos]
@@ -288,10 +295,12 @@ move_row_funcs:
 %endrep
 
 section .bss
-textrender_charmap:
-	resb TEXT_TOTAL
 textrender_flags:
 	resb 1
+textrender_charmap:
+	resb TEXT_TOTAL
+textrender_charmap_flags:
+	resb TEXT_TOTAL
 
 ; Where the rendering code is on the screen
 textrender_drawing_col:

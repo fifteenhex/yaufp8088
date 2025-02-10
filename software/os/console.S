@@ -6,6 +6,7 @@
 %include "../common/pic_8259.S"
 %include "../common/memmap.S"
 %include "../common/interrupts.S"
+%include "../common/templates.h"
 
 section .text
 
@@ -89,8 +90,7 @@ console_uart_rx_inthandler:
 	pop ax
 	iret
 
-global func_console_enableints
-func_console_enableints:
+GLOBAL_FUNC console_enableints
 	; Unmask uart rx/tx
 	pic_unmask 2
 	pic_unmask 5

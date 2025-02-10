@@ -3,3 +3,4 @@
 extern func_console_init
 extern func_console_availablechars
 extern func_console_getch
+extern func_console_enableints

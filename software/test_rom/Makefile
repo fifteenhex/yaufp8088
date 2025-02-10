@@ -9,39 +9,31 @@ time:
 	$(MAKE) -C ../time
 gfx:
 	$(MAKE) -C ../gfx
+	
+.PHONY: ../os.a
+../os.a:
+	$(MAKE) -C ../os
 
 ../common/includes.stamp:
 	$(MAKE) -C ../common includes.stamp
 
 start.o: start.S
-	nasm -wall -g -felf -i ../audio/inc -i ../time/inc -i ../gfx/inc -o $@ $<
+	nasm -wall -g -felf -i ../audio/inc -i ../time/inc -i ../gfx/inc -i ../os/inc -o $@ $<
 
 util.o: util.S
 	nasm -wall -g -felf -o $@ $<
 
-interrupts.o: interrupts.S
-	nasm -wall -g -felf -o $@ $<
-
-console.o: console.S
-	nasm -wall -g -felf -o $@ $<
-
-monitor.o: monitor.S ../common/includes.stamp
-	nasm -wall -g -i ../time/inc -felf -o $@ $<
-
-OBJS=start.o \
-	   util.o \
-	   console.o \
-	   interrupts.o \
-	   monitor.o
+OBJS=start.o
 
 SHAREDOBJS=../common/reset.o \
 	  ../audio/buzzer.o \
 	  ../time/tick.o \
 	  ../time/rtc.o \
 	  ../gfx/display.o \
-	  ../gfx/textrender.o
+	  ../gfx/textrender.o \
+	  ../os/os.a
 
-start.elf: audio time gfx common $(OBJS) rom.ld
+start.elf: audio time gfx common ../os.a $(OBJS) rom.ld
 	ld -melf_i386 --no-check-sections -T rom.ld -o $@ $(OBJS) $(SHAREDOBJS)
 
 start.bin: start.elf

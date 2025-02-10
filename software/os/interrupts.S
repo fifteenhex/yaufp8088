@@ -6,8 +6,8 @@
 %include "../common/usart_8251.S"
 %include "../common/memmap.S"
 %include "../common/interrupts.S"
-%include "interrupts_util.h"
-%include "util.h"
+%include "inc/interrupts_util.h"
+%include "inc/util.h"
 
 section .text
 

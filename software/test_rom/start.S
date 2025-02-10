@@ -180,34 +180,39 @@ shout:
 	mov al, dl
 	out IOPORT_DBG, al
 
-	mov cx, 50
+	mov cx, 30
 waitloop:
 	mov ax, '.'
 	usart_putch
-
-	mov al, '@'
-	call func_textrender_putch
-
 	call func_pit_wait
-
 	call func_textrender_redraw
+	call func_console_enableints
 
-	loop waitloop
+	; uart console thing
+	call func_console_availablechars
+	cmp ax, 0
+	je noch
+	call func_console_getch
+	mov bl, al
+	usart_putch
+	mov al, bl
+	call func_textrender_putch
+noch:
+;
 	
+	loop waitloop
+
 out:
 	add dl, 1
 	call func_tick_get
 	call printhex
 
-	;call func_console_availablechars
+
+
 	call func_rtc_readmin
 	call printhex
 	call func_rtc_readsec
 	call printhex
-	;cmp ax, 0
-	;je noch
-	;call func_console_getch
-	;usart_putch
 
 	;display_set_window_h (8 * 2), (8 * 3)
 	;display_set_window_v (8 * 2), (8 * 3)
@@ -216,8 +221,6 @@ out:
 	;mov ax, 0xffff
 	;mov cx, (8 * 8) * 2
 	;call func_display_fill_rect
-
-noch:
 
 	jmp shout
 
