@@ -185,7 +185,7 @@ waitloop:
 	mov ax, '.'
 	usart_putch
 
-	mov ax, '.'
+	mov al, '@'
 	call func_textrender_putch
 
 	call func_pit_wait

@@ -10,11 +10,14 @@
 %include "inc/display_util.h"
 
 %define TEXT_COLS	22
-%define TEXT_ROWS	12
+%define TEXT_ROWS	13
 %define TEXT_TOTAL	(TEXT_COLS * TEXT_ROWS)
 
 %define TEXT_COLOUR_FG	0xffff
 %define TEXT_COLOUR_BG	0x0000
+
+%define TEXT_ROW_HEIGHT 16
+%define TEXT_ROW_GAP	1
 
 ; toggles on and off each frame
 %define TEXT_FLAG_ODDFRAME	(1)
@@ -27,6 +30,7 @@ GLOBAL_FUNC textrender_init
 	mov [es:textrender_flags], BYTE 0
 	mov [es:textrender_cursor_col], WORD 0
 	mov [es:textrender_cursor_row], WORD 0
+	mov [es:textrender_cursor_pos], WORD 0
 
 	mov cx, TEXT_TOTAL
 	mov si, textrender_charmap
@@ -99,8 +103,9 @@ STATIC_FUNC textrender_move_window_row
 %assign r 0
 %rep TEXT_ROWS
 display_set_window_v_row_%+r:
-	display_set_window_v (16 * r), ((16 * r) + 15)
-	display_write_reg ILI9225_REG_RAMADDRESSSET_2, (16 * r)
+%assign row_off ((TEXT_ROW_HEIGHT + TEXT_ROW_GAP) * r)
+	display_set_window_v row_off, (row_off + 15)
+	display_write_reg ILI9225_REG_RAMADDRESSSET_2, row_off
 	ret
 %assign r r+1
 %endrep
@@ -177,7 +182,22 @@ GLOBAL_FUNC textrender_reset
 	mov [es:textrender_cursor_row], BYTE 0
 	ret
 
+%macro textrender_putch_insertchar 0
+	mov bx, textrender_charmap
+	mov di, WORD [es:textrender_cursor_pos]
+	mov [es:bx+di], al
+%endmacro
+
 %macro textrender_putch_updatecursor 0
+	; increment the absolute position of the cursor
+	mov ax, WORD [es:textrender_cursor_pos]
+	inc ax
+	cmp ax, TEXT_TOTAL
+	jne %%set_pos
+	mov ax, 0
+%%set_pos:
+	mov WORD [es:textrender_cursor_pos], ax
+
 	; increment col, see if its at the limit
 	mov al, BYTE [es:textrender_cursor_col]
 	inc al
@@ -200,6 +220,7 @@ GLOBAL_FUNC textrender_reset
 %endmacro
 
 GLOBAL_FUNC textrender_putch
+	textrender_putch_insertchar
 	textrender_putch_updatecursor
 	ret
 
@@ -291,3 +312,5 @@ textrender_cursor_row:
 	resb 1
 ; dummy - must be zero!
 	resb 1
+textrender_cursor_pos:
+	resw 1
