@@ -12,16 +12,17 @@
 
 %define TICK_PIT_CHAN	1
 %define TICK_PIC_IRQ	1
+%define TICK_DIVIDER	((TICK_INPUT_HZ/1000) * TICK_PERIOD_MS)
 
 section .text
 
 %macro pit_arm 0
-	; counter1, mode0, counter ~100ms
+	; counter1, mode0, counter, period ~TICK_PERIOD_MS
 	mov al, ((TICK_PIT_CHAN << PIT_CTRL_COUNTER_SHIFT) | PIT_CTRL_READLOAD_LSBMSB)
 	out IOPORT_PIT_CTRL, al
-	mov al, 0x24
+	mov al, (TICK_DIVIDER & 0xff)
 	out IOPORT_PIT_CNT1, al
-	mov al, 0xf4
+	mov al, ((TICK_DIVIDER >> 8) & 0xff)
 	out IOPORT_PIT_CNT1, al
 %endmacro
 
