@@ -98,6 +98,11 @@ GLOBAL_FUNC console_refresh
 	ret
 GLOBAL_FUNC_END
 
+GLOBAL_FUNC console_blinketc
+	call func_textrender_blink
+	ret
+GLOBAL_FUNC_END
+
 GLOBAL_FUNC console_enableints
 	; Unmask uart rx/tx
 	pic_unmask 2

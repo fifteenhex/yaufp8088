@@ -266,11 +266,14 @@ _redraw_row:
 	inc BYTE [es:textrender_drawing_row]
 	loop _redraw_row
 
-	; flag update
-	xor BYTE [es:textrender_flags], TEXT_FLAG_ODDFRAME
-
 	pop si
 	pop cx
+	ret
+GLOBAL_FUNC_END
+
+GLOBAL_FUNC textrender_blink
+	; flag update
+	xor BYTE [es:textrender_flags], TEXT_FLAG_ODDFRAME
 	ret
 GLOBAL_FUNC_END
 
