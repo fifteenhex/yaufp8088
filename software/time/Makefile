@@ -1,5 +1,5 @@
 .PHONY: all
-all: tick.o rtc.o
+all: time.a
 
 .PHONY: common
 common:
@@ -13,3 +13,6 @@ tick.o: tick.S ../common/includes.stamp
 
 rtc.o: rtc.S
 	nasm -wall -g -felf -o $@ $<
+
+time.a: tick.o rtc.o
+	ar rs $@ $^

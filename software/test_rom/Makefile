@@ -1,18 +1,18 @@
 all: rom_512k.img
 
-.PHONY: common audio time gfx
+.PHONY: common audio
 common:
 	$(MAKE) -C ../common
 audio:
 	$(MAKE) -C ../audio
-time:
+
+.PHONY: ../time/time.a ../os/os.a ../os/gfx.a
+../time/time.a:
 	$(MAKE) -C ../time
-gfx:
-	$(MAKE) -C ../gfx
-	
-.PHONY: ../os.a
-../os.a:
+../os/os.a:
 	$(MAKE) -C ../os
+../gfx/gfx.a:
+	$(MAKE) -C ../gfx
 
 ../common/includes.stamp:
 	$(MAKE) -C ../common includes.stamp
@@ -26,15 +26,14 @@ util.o: util.S
 OBJS=start.o
 
 SHAREDOBJS=../common/reset.o \
-	  ../audio/buzzer.o \
-	  ../time/tick.o \
-	  ../time/rtc.o \
-	  ../gfx/display.o \
-	  ../gfx/textrender.o \
-	  ../os/os.a
+	  ../audio/buzzer.o
 
-start.elf: audio time gfx common ../os.a $(OBJS) rom.ld
-	ld -melf_i386 --no-check-sections -T rom.ld -o $@ $(OBJS) $(SHAREDOBJS)
+STATICLIBS=../time/time.a \
+	   ../os/os.a \
+	   ../gfx/gfx.a
+
+start.elf: audio common $(STATICLIBS) $(OBJS) rom.ld
+	ld -melf_i386 --no-check-sections -T rom.ld -o $@ $(OBJS) $(SHAREDOBJS) $(STATICLIBS)
 
 start.bin: start.elf
 	objcopy --gap-fill=0xff -O binary $< $@
