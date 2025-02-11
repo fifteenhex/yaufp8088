@@ -8,6 +8,8 @@
 %include "../common/interrupts.S"
 %include "../common/templates.h"
 
+%include "tick_defs.h"
+
 %define TICK_PIT_CHAN	1
 %define TICK_PIC_IRQ	1
 

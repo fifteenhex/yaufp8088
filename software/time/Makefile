@@ -9,7 +9,7 @@ common:
 	$(MAKE) -C ../common includes.stamp
 
 tick.o: tick.S ../common/includes.stamp
-	nasm -wall -g -felf -o $@ $<
+	nasm -wall -g -i ./inc -felf -o $@ $<
 
 rtc.o: rtc.S
 	nasm -wall -g -felf -o $@ $<
