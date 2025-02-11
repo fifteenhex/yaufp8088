@@ -21,6 +21,8 @@
 %include "interrupts.h"
 %include "util.h"
 
+%include "eventloop.h"
+
 global _main
 extern divzerointhandler
 extern badint_0
@@ -161,6 +163,7 @@ _tick_test_next:
 ; left over inits before looping
 	call func_textrender_init
 	call func_console_init
+	call func_console_enableints
 
 ; Test loop
 	mov bx, str_testloop
@@ -184,22 +187,7 @@ shout:
 waitloop:
 	mov ax, '.'
 	usart_putch
-	call func_pit_wait
-	call func_textrender_redraw
-	call func_console_enableints
-
-	; uart console thing
-	call func_console_availablechars
-	cmp ax, 0
-	je noch
-	call func_console_getch
-	mov bl, al
-	usart_putch
-	mov al, bl
-	call func_textrender_putch
-noch:
-;
-	
+	call func_eventloop
 	loop waitloop
 
 out:
@@ -207,20 +195,10 @@ out:
 	call func_tick_get
 	call printhex
 
-
-
 	call func_rtc_readmin
 	call printhex
 	call func_rtc_readsec
 	call printhex
-
-	;display_set_window_h (8 * 2), (8 * 3)
-	;display_set_window_v (8 * 2), (8 * 3)
-	;display_write_reg ILI9225_REG_RAMADDRESSSET_1,(8 * 2)
-	;display_write_reg ILI9225_REG_RAMADDRESSSET_2,(8 * 2)
-	;mov ax, 0xffff
-	;mov cx, (8 * 8) * 2
-	;call func_display_fill_rect
 
 	jmp shout
 

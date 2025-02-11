@@ -8,10 +8,12 @@
 %include "../common/interrupts.S"
 %include "../common/templates.h"
 
+; for the on screen console
+%include "textrender.h"
+
 section .text
 
-global func_console_init
-func_console_init:
+GLOBAL_FUNC console_init
 	pushf
 	cli
 
@@ -38,9 +40,9 @@ func_console_init:
 	pop es
 	popf
 	ret
+GLOBAL_FUNC_END
 
-global func_console_availablechars
-func_console_availablechars:
+GLOBAL_FUNC console_availablechars
 	push bx
 	push cx
 	xor ax, ax
@@ -49,16 +51,16 @@ func_console_availablechars:
 	mov cl, [es:console_rxtail]
 
 	cmp bl, cl
-	je func_console_availablechars_out
+	je console_availablechars_out
 	mov al, 1
 
-func_console_availablechars_out:
+console_availablechars_out:
 	pop cx
 	pop bx
 	ret
+GLOBAL_FUNC_END
 
-global func_console_getch
-func_console_getch:
+GLOBAL_FUNC console_getch
 	push bx
 	xor bx, bx
 
@@ -69,6 +71,39 @@ func_console_getch:
 
 	pop bx
 	ret
+GLOBAL_FUNC_END
+
+; Periodic processing to update the screen state
+GLOBAL_FUNC console_process
+nextch:
+	; uart console thing
+	call func_console_availablechars
+	cmp ax, 0
+	je noch
+
+	call func_console_getch
+	mov bl, al
+	usart_putch
+	mov al, bl
+	call func_textrender_putch
+	jmp nextch
+
+noch:
+;
+	ret
+GLOBAL_FUNC_END
+
+GLOBAL_FUNC console_refresh
+	call func_textrender_redraw
+	ret
+GLOBAL_FUNC_END
+
+GLOBAL_FUNC console_enableints
+	; Unmask uart rx/tx
+	pic_unmask 2
+	pic_unmask 5
+	ret
+GLOBAL_FUNC_END
 
 console_uart_rx_inthandler:
 	push ax
@@ -90,12 +125,6 @@ console_uart_rx_inthandler:
 	pop ax
 	iret
 
-GLOBAL_FUNC console_enableints
-	; Unmask uart rx/tx
-	pic_unmask 2
-	pic_unmask 5
-	ret
-	
 console_uart_tx_inthandler:
 	push ax
 	pic_eoi

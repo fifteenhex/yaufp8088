@@ -6,6 +6,7 @@
 %include "../common/pic_8259.S"
 %include "../common/memmap.S"
 %include "../common/interrupts.S"
+%include "../common/templates.h"
 
 %define TICK_PIT_CHAN	1
 %define TICK_PIC_IRQ	1
@@ -22,8 +23,7 @@ section .text
 	out IOPORT_PIT_CNT1, al
 %endmacro
 
-global func_tick_init
-func_tick_init:
+GLOBAL_FUNC tick_init
 	pushf
 	cli
 
@@ -47,19 +47,19 @@ func_tick_init:
 	pop es
 	popf
 	ret
+GLOBAL_FUNC_END
 
-global func_tick_get
-func_tick_get:
+GLOBAL_FUNC tick_get
 	mov ax, [es:ticks]
 	ret
+GLOBAL_FUNC_END
 
-global func_tick_once
-func_tick_once:
+GLOBAL_FUNC tick_once
 	pit_arm
 	ret
+GLOBAL_FUNC_END
 
-global func_tick_start
-func_tick_start:
+GLOBAL_FUNC tick_start
 	push ax
 
 	mov [es:tick_enabled], BYTE 1
@@ -70,9 +70,9 @@ func_tick_start:
 
 	pop ax
 	ret
+GLOBAL_FUNC_END
 
-global func_pit_wait
-func_pit_wait:
+GLOBAL_FUNC pit_wait
 	push ax
 	; load the current ticks value
 	mov ax, WORD [es:ticks]
@@ -87,6 +87,7 @@ _pit_wait:
 
 	pop ax
 	ret
+GLOBAL_FUNC_END
 
 global func_tick_stop
 func_tick_stop:

@@ -1,7 +1,7 @@
 all: os.a
 
 console.o: console.S
-	nasm -wall -g -felf -o $@ $<
+	nasm -wall -g -i ../gfx/inc -felf -o $@ $<
 
 interrupts.o: interrupts.S
 	nasm -wall -g -i ./inc -felf -o $@ $<
@@ -12,6 +12,9 @@ monitor.o: monitor.S ../common/includes.stamp
 util.o: util.S
 	nasm -wall -g -felf -o $@ $<
 
-os.a: console.o interrupts.o monitor.o util.o
+eventloop.o: eventloop.S
+	nasm -wall -g -i ./inc -i ../time/inc -i ../gfx/inc -felf -o $@ $<
+
+os.a: console.o interrupts.o monitor.o util.o eventloop.o
 	ar rs $@ $^
 
