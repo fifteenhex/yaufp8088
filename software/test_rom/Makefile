@@ -6,7 +6,7 @@ common:
 audio:
 	$(MAKE) -C ../audio
 
-.PHONY: ../time/time.a ../os/os.a ../os/gfx.a
+.PHONY: ../time/time.a ../os/os.a ../gfx/gfx.a
 ../time/time.a:
 	$(MAKE) -C ../time
 ../os/os.a:

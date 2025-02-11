@@ -9,9 +9,11 @@
 
 %include "inc/display_util.h"
 
-%define TEXT_COLS	22
-%define TEXT_ROWS	13
-%define TEXT_TOTAL	(TEXT_COLS * TEXT_ROWS)
+%define TEXT_COLS			22
+%define TEXT_ROWS			13
+%define TEXT_TOTAL			(TEXT_COLS * TEXT_ROWS)
+%define TEXT_CHARMAP_ENTRY_SZ 2
+%define TEXT_TOTAL_BYTES	(TEXT_TOTAL * TEXT_CHARMAP_ENTRY_SZ)
 
 %define TEXT_COLOUR_FG	0xffff
 %define TEXT_COLOUR_BG	0x0000
@@ -21,6 +23,10 @@
 
 ; toggles on and off each frame
 %define TEXT_FLAG_ODDFRAME	(1)
+
+%define TEXT_CHARFLAG_CLEAN (1)
+
+section .text
 
 GLOBAL_FUNC textrender_reset
 	push cx
@@ -35,26 +41,65 @@ GLOBAL_FUNC textrender_reset
 	mov cx, TEXT_TOTAL
 	mov si, textrender_charmap
 _textrender_reset_charmap_clear:
-	mov [es:si], BYTE ' '
-	inc si
+	mov [es:si], WORD 0x0020
+	add si, 2
 	loop _textrender_reset_charmap_clear
-
-	; clear the charmap flags
-	mov cx, TEXT_TOTAL
-	mov si, textrender_charmap_flags
-_textrender_reset_charmapflags_clear:
-	mov [es:si], BYTE 0
-	inc si
-	loop _textrender_reset_charmapflags_clear
 
 	pop si
 	pop cx
 	ret
+GLOBAL_FUNC_END
 
-section .text
 GLOBAL_FUNC textrender_init
 	call func_textrender_reset
 	ret
+GLOBAL_FUNC_END
+
+%macro textrender_putch_insertchar 0
+	mov bx, textrender_charmap
+	mov di, WORD [es:textrender_cursor_pos]
+
+	; clear the flags at the top and write the char and flags
+	mov ah, 0
+	mov [es:bx+di], ax
+%endmacro
+
+%macro textrender_putch_updatecursor 0
+	; increment the absolute position of the cursor
+	mov ax, WORD [es:textrender_cursor_pos]
+	add ax, TEXT_CHARMAP_ENTRY_SZ
+	cmp ax, TEXT_TOTAL_BYTES
+	jne %%set_pos
+	mov ax, 0
+%%set_pos:
+	mov WORD [es:textrender_cursor_pos], ax
+
+	; increment col, see if its at the limit
+	mov al, BYTE [es:textrender_cursor_col]
+	inc al
+	cmp al, TEXT_COLS
+	jne %%set_col
+
+	; col has wrapped, check the row
+	mov al, BYTE [es:textrender_cursor_row]
+	inc al
+	cmp al, TEXT_ROWS
+	jne %%set_row
+	mov al, 0
+
+%%set_row:
+	mov BYTE [es:textrender_cursor_row], al
+	; if we set the row then col has to be zero
+	mov al, 0
+%%set_col:
+	mov BYTE [es:textrender_cursor_col], al
+%endmacro
+
+GLOBAL_FUNC textrender_putch
+	textrender_putch_insertchar
+	textrender_putch_updatecursor
+	ret
+GLOBAL_FUNC_END
 
 %macro textrender_draw_char_bitmap 0
 	display_set_index ILI9225_REG_GRAM
@@ -153,6 +198,9 @@ STATIC_FUNC textrender_override_char_for_cursor
 	cmp bx, [es:textrender_cursor_row]
 	jne _override_out
 
+	; Ignore the clean flag for the cursor
+	and ah , ~TEXT_CHARFLAG_CLEAN
+
 	; is this the odd frame?
 	test BYTE [es:textrender_flags], TEXT_FLAG_ODDFRAME
 	je _override_odd
@@ -173,63 +221,33 @@ _override_out:
 	mov cx, TEXT_COLS
 
 %%next:
-	; load the character into al
-	; and increment pointer
-	mov al, [es:si]
-	inc si
+	; load the character and flags into ax, flags in ah,
+	; character in al
+	mov ax, [es:si]
 
 	call func_textrender_override_char_for_cursor
 
 %%draw:
+	; Check if this character is already up to date on the screen
+	test ah, TEXT_CHARFLAG_CLEAN
+	jnz %%skip
+
 	textrender_draw_char
 
+	; Mark the char as clean
+	; todo, What state is AH in at this point? :D
+	mov ah, TEXT_CHARFLAG_CLEAN
+	mov [es:si + 1], ah
+
+%%skip:
+	; increment col and charmap pointer
 	inc BYTE [es:textrender_drawing_col]
+	add si, 2
+
 	loop %%next
 
 	pop cx
 %endmacro
-
-%macro textrender_putch_insertchar 0
-	mov bx, textrender_charmap
-	mov di, WORD [es:textrender_cursor_pos]
-	mov [es:bx+di], al
-%endmacro
-
-%macro textrender_putch_updatecursor 0
-	; increment the absolute position of the cursor
-	mov ax, WORD [es:textrender_cursor_pos]
-	inc ax
-	cmp ax, TEXT_TOTAL
-	jne %%set_pos
-	mov ax, 0
-%%set_pos:
-	mov WORD [es:textrender_cursor_pos], ax
-
-	; increment col, see if its at the limit
-	mov al, BYTE [es:textrender_cursor_col]
-	inc al
-	cmp al, TEXT_COLS
-	jne %%set_col
-
-	; col has wrapped, check the row
-	mov al, BYTE [es:textrender_cursor_row]
-	inc al
-	cmp al, TEXT_ROWS
-	jne %%set_row
-	mov al, 0
-
-%%set_row:
-	mov BYTE [es:textrender_cursor_row], al
-	; if we set the row then col has to be zero
-	mov al, 0
-%%set_col:
-	mov BYTE [es:textrender_cursor_col], al
-%endmacro
-
-GLOBAL_FUNC textrender_putch
-	textrender_putch_insertchar
-	textrender_putch_updatecursor
-	ret
 
 GLOBAL_FUNC textrender_redraw
 	push cx
@@ -254,6 +272,7 @@ _redraw_row:
 	pop si
 	pop cx
 	ret
+GLOBAL_FUNC_END
 
 section .data
 font:
@@ -298,9 +317,7 @@ section .bss
 textrender_flags:
 	resb 1
 textrender_charmap:
-	resb TEXT_TOTAL
-textrender_charmap_flags:
-	resb TEXT_TOTAL
+	resw TEXT_TOTAL
 
 ; Where the rendering code is on the screen
 textrender_drawing_col:
