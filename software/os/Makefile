@@ -15,6 +15,9 @@ util.o: util.S
 eventloop.o: eventloop.S
 	nasm -wall -g -i ./inc -i ../time/inc -i ../gfx/inc -felf -o $@ $<
 
-os.a: console.o interrupts.o monitor.o util.o eventloop.o
+shell.o: shell.S
+	nasm -wall -g -felf -o $@ $<
+
+os.a: console.o interrupts.o monitor.o util.o eventloop.o shell.o
 	ar rs $@ $^
 

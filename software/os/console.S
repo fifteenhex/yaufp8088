@@ -35,10 +35,13 @@ GLOBAL_FUNC console_init
 	; insert uart tx handler
 	mov bx, INTERRUPTS_PIC_IVT_IR5
 	mov [es:bx], WORD console_uart_tx_inthandler
-	
+
 	pop bx
 	pop es
 	popf
+
+	call func_textrender_init
+
 	ret
 GLOBAL_FUNC_END
 
@@ -70,6 +73,13 @@ GLOBAL_FUNC console_getch
 	mov [es:console_rxtail], bl
 
 	pop bx
+	ret
+GLOBAL_FUNC_END
+
+; al - ascii
+GLOBAL_FUNC console_putch
+	usart_putch
+
 	ret
 GLOBAL_FUNC_END
 

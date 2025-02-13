@@ -161,7 +161,6 @@ _tick_test_next:
 	usart_puts
 
 ; left over inits before looping
-	call func_textrender_init
 	call func_console_init
 	call func_console_enableints
 
@@ -186,7 +185,7 @@ shout:
 	mov cx, 30
 waitloop:
 	mov ax, '.'
-	usart_putch
+	call func_console_putch
 	call func_eventloop
 	loop waitloop
 
