@@ -398,6 +398,14 @@
     [
       "b100bdca-4592-44f1-b1ae-17e35b2472aa",
       "PLDs"
+    ],
+    [
+      "0d82af7d-841f-490b-9a0c-6b7b1644160d",
+      "memory"
+    ],
+    [
+      "23d80b6f-c5dc-415d-afc4-2c1b134429d0",
+      "rtc"
     ]
   ],
   "text_variables": {}
