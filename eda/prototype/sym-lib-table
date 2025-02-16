@@ -2,4 +2,5 @@
   (version 7)
   (lib (name "parts")(type "KiCad")(uri "${KIPRJMOD}/parts.kicad_sym")(options "")(descr ""))
   (lib (name "82xx")(type "KiCad")(uri "/home/daniel/82xx.kicad_sym")(options "")(descr ""))
+  (lib (name "8bits")(type "KiCad")(uri "/home/daniel/8bits.kicad_sym")(options "")(descr ""))
 )

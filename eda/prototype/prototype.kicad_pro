@@ -390,6 +390,14 @@
     [
       "1f40725d-864c-4f03-b439-1cd3f28006aa",
       "display"
+    ],
+    [
+      "b807d40e-7d1a-4071-a906-46405fe1da98",
+      "RNG"
+    ],
+    [
+      "b100bdca-4592-44f1-b1ae-17e35b2472aa",
+      "PLDs"
     ]
   ],
   "text_variables": {}
